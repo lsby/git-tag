@@ -280,3 +280,109 @@ export function 显示输入对话框(消息: string, 默认值?: string, 提示
     }, 0)
   })
 }
+
+export function 显示删除确认对话框(消息: string, 提示?: string): Promise<{ 确认: boolean; 同步删除远程: boolean }> {
+  return new Promise((resolve) => {
+    let 遮罩层 = 创建元素('div', {
+      style: {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'var(--遮罩颜色)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: '10000',
+      },
+    })
+
+    let 对话框 = 创建元素('div', {
+      style: {
+        backgroundColor: 'var(--卡片背景颜色)',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px var(--深阴影颜色)',
+        minWidth: '300px',
+        maxWidth: '500px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        border: '1px solid var(--边框颜色)',
+      },
+    })
+
+    let 消息元素 = 创建元素('div', {
+      textContent: 消息,
+      style: { fontSize: '14px', lineHeight: '1.5', color: 'var(--文字颜色)', whiteSpace: 'pre-wrap' },
+    })
+    对话框.appendChild(消息元素)
+
+    if (提示 !== undefined) {
+      let 提示元素 = 创建元素('div', {
+        textContent: 提示,
+        style: { fontSize: '12px', lineHeight: '1.5', color: 'var(--次要文字颜色)', whiteSpace: 'pre-wrap' },
+      })
+      对话框.appendChild(提示元素)
+    }
+
+    let 危险选项容器 = 创建元素('label', {
+      style: { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px' },
+    })
+    let 危险选项勾选框 = 创建元素('input', { type: 'checkbox' })
+    let 危险选项文字 = 创建元素('span', {
+      textContent: '我已知晓删除操作会同步删除远程仓库，且不可恢复',
+      style: { fontSize: '13px', color: 'var(--警告颜色)', fontWeight: 'bold' },
+    })
+    危险选项容器.appendChild(危险选项勾选框)
+    危险选项容器.appendChild(危险选项文字)
+    对话框.appendChild(危险选项容器)
+
+    let 按钮容器 = 创建元素('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: '8px' } })
+
+    let 关闭对话框 = (确认: boolean): void => {
+      document.body.removeChild(遮罩层)
+      document.onkeydown = null
+      resolve({ 确认, 同步删除远程: 危险选项勾选框.checked })
+    }
+
+    let 取消按钮 = new 普通按钮({
+      文本: '取消',
+      点击处理函数: (): void => {
+        关闭对话框(false)
+      },
+    })
+
+    let 确定按钮 = new 主要按钮({
+      文本: '确定删除',
+      禁用: true,
+      元素样式: { backgroundColor: 'var(--警告颜色)' },
+      点击处理函数: (): void => {
+        关闭对话框(true)
+      },
+    })
+
+    危险选项勾选框.onchange = (): void => {
+      确定按钮.设置禁用(!危险选项勾选框.checked)
+    }
+
+    let 键盘处理 = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        关闭对话框(false)
+      }
+    }
+
+    document.onkeydown = 键盘处理
+
+    按钮容器.appendChild(取消按钮)
+    按钮容器.appendChild(确定按钮)
+    对话框.appendChild(按钮容器)
+    遮罩层.appendChild(对话框)
+    document.body.appendChild(遮罩层)
+
+    setTimeout(() => {
+      确定按钮.按钮聚焦()
+    }, 0)
+  })
+}

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, screen, shell } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import { App } from './app/app'
@@ -68,9 +68,10 @@ async function 创建主窗口(): Promise<void> {
 
   let 预加载脚本 = [
     '// 该文件由脚本自动生成, 请勿修改.',
-    "const { contextBridge, webUtils } = require('electron')",
+    "const { contextBridge, webUtils, ipcRenderer } = require('electron')",
     "contextBridge.exposeInMainWorld('electronAPI', {",
-    '  获取文件路径: (file) => webUtils.getPathForFile(file)',
+    '  获取文件路径: (file) => webUtils.getPathForFile(file),',
+    '  选择文件夹: () => ipcRenderer.invoke("select-directory")',
     '})',
     '',
   ].join('\n')
@@ -137,6 +138,11 @@ async function 创建主窗口(): Promise<void> {
 
   主窗口 = new BrowserWindow(窗口配置)
 
+  主窗口.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url).catch(console.error)
+    return { action: 'deny' }
+  })
+
   if (使用保存的位置 === true && 保存的状态 !== null) {
     await 验证并修正窗口(主窗口, 保存的状态)
   }
@@ -181,6 +187,13 @@ async function 创建主窗口(): Promise<void> {
     主窗口 = null
   })
 }
+
+ipcMain.handle('select-directory', async () => {
+  if (主窗口 === null) return null
+  let result = await dialog.showOpenDialog(主窗口, { properties: ['openDirectory'] })
+  if (result.canceled) return null
+  return result.filePaths[0]
+})
 
 app.on('ready', 创建主窗口)
 app.on('window-all-closed', () => {

@@ -38,7 +38,18 @@ let 接口逻辑实现 = 接口逻辑
         主题 = '系统'
       }
 
-      return new Right({ id: 配置.id, theme: 主题 })
+      let 默认克隆路径 = 配置.default_clone_path ?? ''
+
+      let 克隆协议: 'https' | 'ssh' = 'https'
+      try {
+        if (配置.clone_protocol !== null && 配置.clone_protocol !== '') {
+          克隆协议 = z.enum(['https', 'ssh']).parse(配置.clone_protocol)
+        }
+      } catch (_e) {
+        克隆协议 = 'https'
+      }
+
+      return new Right({ id: 配置.id, theme: 主题, clone_protocol: 克隆协议, default_clone_path: 默认克隆路径 })
     }),
   )
 
@@ -47,6 +58,11 @@ type _接口逻辑错误返回 = 计算接口逻辑错误结果<typeof 接口逻
 type _接口逻辑正确返回 = 计算接口逻辑正确结果<typeof 接口逻辑实现>
 
 let 接口错误类型描述 = z.enum(['未登录', '用户配置不存在'])
-let 接口正确类型描述 = z.object({ id: z.string(), theme: z.enum(['系统', '亮色', '暗色']) })
+let 接口正确类型描述 = z.object({
+  id: z.string(),
+  theme: z.enum(['系统', '亮色', '暗色']),
+  clone_protocol: z.enum(['https', 'ssh']),
+  default_clone_path: z.string(),
+})
 
 export default new 接口(接口路径, 接口方法, 接口逻辑实现, new 常用接口返回器(接口错误类型描述, 接口正确类型描述))

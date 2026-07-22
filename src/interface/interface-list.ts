@@ -32,9 +32,24 @@ import _src_interface_demo_plugin_advanced_custom_type_export_index_ts from './d
 import _src_interface_demo_plugin_advanced_express_middleware_wrap_index_ts from './demo/plugin-advanced/express-middleware-wrap/index'
 import _src_interface_demo_pure_pure_string_index_ts from './demo/pure/pure-string/index'
 import _src_interface_demo_ws_ws_test_index_ts from './demo/ws/ws-test/index'
+import _src_interface_project_fca_get_children_index_ts from './project/fca/get-children/index'
+import _src_interface_project_fca_get_concept_tags_index_ts from './project/fca/get-concept-tags/index'
 import _src_interface_project_is_login_index_ts from './project/is-login/index'
 import _src_interface_project_login_index_ts from './project/login/index'
+import _src_interface_project_provider_list_index_ts from './project/provider/list/index'
+import _src_interface_project_provider_save_index_ts from './project/provider/save/index'
+import _src_interface_project_provider_sync_index_ts from './project/provider/sync/index'
 import _src_interface_project_register_index_ts from './project/register/index'
+import _src_interface_project_repo_check_clone_dir_index_ts from './project/repo/check-clone-dir/index'
+import _src_interface_project_repo_clone_repo_index_ts from './project/repo/clone-repo/index'
+import _src_interface_project_repo_delete_index_ts from './project/repo/delete/index'
+import _src_interface_project_repo_get_ignored_list_index_ts from './project/repo/get-ignored-list/index'
+import _src_interface_project_repo_ignore_index_ts from './project/repo/ignore/index'
+import _src_interface_project_repo_open_folder_index_ts from './project/repo/open-folder/index'
+import _src_interface_project_repo_search_index_ts from './project/repo/search/index'
+import _src_interface_project_repo_unignore_index_ts from './project/repo/unignore/index'
+import _src_interface_project_repo_update_info_index_ts from './project/repo/update-info/index'
+import _src_interface_project_repo_update_tags_index_ts from './project/repo/update-tags/index'
 import _src_interface_system_get_enable_registration_index_ts from './system/get-enable-registration/index'
 import _src_interface_system_get_interface_type_index_ts from './system/get-interface-type/index'
 import _src_interface_system_get_system_config_index_ts from './system/get-system-config/index'
@@ -78,9 +93,24 @@ export let interfaceApiList: 任意接口[] = [
   _src_interface_demo_plugin_advanced_express_middleware_wrap_index_ts,
   _src_interface_demo_pure_pure_string_index_ts,
   _src_interface_demo_ws_ws_test_index_ts,
+  _src_interface_project_fca_get_children_index_ts,
+  _src_interface_project_fca_get_concept_tags_index_ts,
   _src_interface_project_is_login_index_ts,
   _src_interface_project_login_index_ts,
+  _src_interface_project_provider_list_index_ts,
+  _src_interface_project_provider_save_index_ts,
+  _src_interface_project_provider_sync_index_ts,
   _src_interface_project_register_index_ts,
+  _src_interface_project_repo_check_clone_dir_index_ts,
+  _src_interface_project_repo_clone_repo_index_ts,
+  _src_interface_project_repo_delete_index_ts,
+  _src_interface_project_repo_get_ignored_list_index_ts,
+  _src_interface_project_repo_ignore_index_ts,
+  _src_interface_project_repo_open_folder_index_ts,
+  _src_interface_project_repo_search_index_ts,
+  _src_interface_project_repo_unignore_index_ts,
+  _src_interface_project_repo_update_info_index_ts,
+  _src_interface_project_repo_update_tags_index_ts,
   _src_interface_system_get_enable_registration_index_ts,
   _src_interface_system_get_interface_type_index_ts,
   _src_interface_system_get_system_config_index_ts,

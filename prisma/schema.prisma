@@ -38,7 +38,9 @@ model user_config {
   user_id String @unique // 所属用户id(唯一)
   user    user   @relation(fields: [user_id], references: [id], onUpdate: Restrict, onDelete: Restrict)
 
-  theme String // 主题颜色: 系统 | 亮色 | 暗色
+  theme              String // 主题颜色: 系统 | 亮色 | 暗色
+  clone_protocol     String? // 克隆协议: https | ssh
+  default_clone_path String? // 默认克隆路径
 }
 
 // 用户
@@ -51,5 +53,83 @@ model user {
   pwd      String // 密码
   is_admin Boolean // 是管理员
 
-  user_config user_config[]
+  user_config          user_config[]
+  git_provider_configs git_provider_config[]
+  git_repos            git_repo[]
+  git_ignored_repos    git_ignored_repo[]
+}
+
+// =================================================
+// Git-Tag 业务模型
+
+// Git 服务商配置
+model git_provider_config {
+  id         String   @id
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  user_id       String
+  user          user     @relation(fields: [user_id], references: [id], onUpdate: Restrict, onDelete: Restrict)
+  provider_type String // 服务商类型，例如 'github'
+  token         String // 访问令牌
+
+  git_repos git_repo[]
+}
+
+// Git 仓库
+model git_repo {
+  id         String   @id
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  user_id     String
+  user        user                @relation(fields: [user_id], references: [id], onUpdate: Restrict, onDelete: Restrict)
+  provider_id String
+  provider    git_provider_config @relation(fields: [provider_id], references: [id], onUpdate: Restrict, onDelete: Cascade)
+  external_id String // 远程平台上的仓库ID
+  full_name   String // 仓库完整名称 (如 lsby/git-tag)
+  description String // 描述
+  url         String // 仓库链接
+  stars       Int // Star 数量
+  language    String // 主语言
+  is_private  Boolean @default(false) // 是否私有
+  raw_data    String // 原始 API 响应数据
+
+  git_repo_tag_relations git_repo_tag_relation[]
+}
+
+// Git 标签
+model git_tag {
+  id         String   @id
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  name String @unique // 标签名称
+
+  git_repo_tag_relations git_repo_tag_relation[]
+}
+
+// 仓库-标签关联表
+model git_repo_tag_relation {
+  id         String   @id
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  repo_id String
+  repo    git_repo @relation(fields: [repo_id], references: [id], onUpdate: Restrict, onDelete: Cascade)
+  tag_id  String
+  tag     git_tag  @relation(fields: [tag_id], references: [id], onUpdate: Restrict, onDelete: Cascade)
+}
+
+// 屏蔽的仓库 (黑名单)
+model git_ignored_repo {
+  id         String   @id
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  user_id   String
+  user      user   @relation(fields: [user_id], references: [id], onUpdate: Restrict, onDelete: Cascade)
+  full_name String // 仓库完整名称 (如 lsby/git-tag)
+
+  @@unique([user_id, full_name])
 }

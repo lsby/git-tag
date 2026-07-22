@@ -8,6 +8,7 @@ import {
   计算接口逻辑错误结果,
 } from '@lsby/net-core'
 import { Right } from '@lsby/ts-fp-data'
+import { randomUUID } from 'crypto'
 import { z } from 'zod'
 import { jwt插件, kysely插件 } from '../../../global/plugin'
 import { 检查登录 } from '../../../interface-logic/check/check-login-jwt'
@@ -20,16 +21,52 @@ let 接口逻辑实现 = 接口逻辑
   .绑定(new 检查登录([jwt插件.解析器, kysely插件], () => ({ 表名: 'user', id字段: 'id' })))
   .绑定(
     接口逻辑.构造(
-      [new JSON参数解析插件(z.object({ theme: z.enum(['系统', '亮色', '暗色']) }), {}), kysely插件],
+      [
+        new JSON参数解析插件(
+          z.object({
+            theme: z.enum(['系统', '亮色', '暗色']),
+            clone_protocol: z.enum(['https', 'ssh']).optional(),
+            default_clone_path: z.string().optional(),
+          }),
+          {},
+        ),
+        kysely插件,
+      ],
       async (参数, 逻辑附加参数, 请求附加参数) => {
         let _log = 请求附加参数.log.extend(接口路径)
+        await _log.info('[DEBUG-Backend] 收到更新配置参数: ', 参数.json)
 
-        await 参数.kysely
+        let 已存在 = await 参数.kysely
           .获得句柄()
-          .updateTable('user_config')
-          .set({ theme: 参数.json.theme })
+          .selectFrom('user_config')
+          .selectAll()
           .where('user_id', '=', 逻辑附加参数.userId)
-          .execute()
+          .executeTakeFirst()
+
+        if (已存在 === undefined) {
+          await 参数.kysely
+            .获得句柄()
+            .insertInto('user_config')
+            .values({
+              id: randomUUID(),
+              user_id: 逻辑附加参数.userId,
+              theme: 参数.json.theme,
+              clone_protocol: 参数.json.clone_protocol ?? null,
+              default_clone_path: 参数.json.default_clone_path ?? null,
+            })
+            .execute()
+        } else {
+          await 参数.kysely
+            .获得句柄()
+            .updateTable('user_config')
+            .set({
+              theme: 参数.json.theme,
+              clone_protocol: 参数.json.clone_protocol ?? null,
+              default_clone_path: 参数.json.default_clone_path ?? null,
+            })
+            .where('user_id', '=', 逻辑附加参数.userId)
+            .execute()
+        }
         return new Right({})
       },
     ),
