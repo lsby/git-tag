@@ -46,9 +46,9 @@ let 主程序 = (): void => {
     执行命令('git push', '推送提交到远程')
     执行命令('git push --tags', '推送标签到远程')
 
-    console.log('\n✨ 流程完成！')
+    console.log('✨ 流程完成！')
   } catch (_错误) {
-    console.error('\n❌ 流程中断，请检查上述错误信息')
+    console.error('❌ 流程中断，请检查上述错误信息')
     process.exit(1)
   }
 }
