@@ -1,6 +1,7 @@
 import type { FcaTreeNodeData } from '../../../../interface/project/fca/get-children/types'
 import { 组件基类 } from '../../../base/base'
 import { API管理器 } from '../../../global/manager/api-manager'
+import { 普通按钮 } from '../../general/base/base-button'
 
 type 发出事件类型 = { 节点选中: { 节点id: string; 节点名称: string } }
 type 监听事件类型 = {}
@@ -39,6 +40,22 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
         div.classList.remove('selected')
       })
       this.当前选中节点id = null
+    })
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+      if (this.当前选中节点id !== null) {
+        let 状态 = this.节点状态映射.get(this.当前选中节点id)
+        if (状态 !== undefined) {
+          if (e.key === 'ArrowLeft') {
+            this.执行节点收起(状态)
+          } else if (e.key === 'ArrowRight') {
+            void this.执行节点展开(状态)
+          }
+        }
+      }
     })
   }
 
@@ -86,8 +103,47 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
   }
 
   private 创建容器(): void {
+    let 工具栏 = document.createElement('div')
+    工具栏.style.display = 'flex'
+    工具栏.style.justifyContent = 'space-between'
+    工具栏.style.alignItems = 'center'
+    工具栏.style.marginBottom = '10px'
+    工具栏.style.flexShrink = '0'
+
+    let 标题 = document.createElement('div')
+    标题.textContent = 'FCA树'
+    标题.style.fontWeight = 'bold'
+    标题.style.fontSize = '14px'
+    工具栏.appendChild(标题)
+
+    let 按钮容器 = document.createElement('div')
+    按钮容器.style.display = 'flex'
+    按钮容器.style.gap = '8px'
+
+    let 展开全部按钮 = new 普通按钮({
+      文本: '展开全部',
+      点击处理函数: (): void => {
+        void this.展开全部()
+      },
+      宿主样式: { padding: '0' },
+      元素样式: { padding: '4px 8px', fontSize: '12px', outline: 'none' },
+    })
+    按钮容器.appendChild(展开全部按钮)
+
+    let 折叠全部按钮 = new 普通按钮({
+      文本: '折叠全部',
+      点击处理函数: (): void => {
+        this.折叠全部()
+      },
+      宿主样式: { padding: '0' },
+      元素样式: { padding: '4px 8px', fontSize: '12px', outline: 'none' },
+    })
+    按钮容器.appendChild(折叠全部按钮)
+    工具栏.appendChild(按钮容器)
+    this.shadow.appendChild(工具栏)
+
+    this.树容器.style.flex = '1'
     this.树容器.style.width = '100%'
-    this.树容器.style.height = '100%'
     this.树容器.style.overflowY = 'auto'
     this.shadow.appendChild(this.树容器)
   }
@@ -122,8 +178,6 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
 
   private async 生成节点元素(节点数据: FcaTreeNodeData, 层级: number): Promise<树节点UI状态> {
     let 节点容器 = document.createElement('div')
-    节点容器.style.marginLeft = `${层级 * 10}px`
-    节点容器.style.paddingLeft = '8px'
     节点容器.style.display = 'flex'
     节点容器.style.flexDirection = 'column'
 
@@ -133,8 +187,10 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
     标题行.style.display = 'flex'
     标题行.style.alignItems = 'center'
     标题行.style.padding = '4px 8px'
+    标题行.style.paddingLeft = `${层级 * 16 + 8}px`
     标题行.style.cursor = 'pointer'
     标题行.style.borderRadius = '4px'
+    标题行.style.margin = '1px 4px'
     标题行.style.flexShrink = '0'
     标题行.style.minHeight = '32px'
     标题行.style.boxSizing = 'border-box'
@@ -143,12 +199,18 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
     let 展开图标 = document.createElement('span')
     // FCA 里所有节点都可能可以展开，只要不是 objectCount = 0（其实为 0 就不返回了）
     // 通过 hasChildren 提前预测
-    展开图标.textContent = '▶'
-    展开图标.style.display = 'inline-block'
-    展开图标.style.width = '16px'
+    展开图标.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="display:block;"><path fill-rule="evenodd" d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z" clip-rule="evenodd"/></svg>`
+    展开图标.style.display = 'flex'
+    展开图标.style.alignItems = 'center'
+    展开图标.style.justifyContent = 'center'
+    展开图标.style.width = '24px'
+    展开图标.style.height = '24px'
     展开图标.style.color = 'var(--次要文字颜色)'
     展开图标.style.cursor = 'pointer'
-    展开图标.style.transition = 'transform 0.2s'
+    展开图标.style.transition = 'transform 0.15s'
+    展开图标.style.borderRadius = '4px'
+    展开图标.style.flexShrink = '0'
+    展开图标.style.marginRight = '2px'
 
     if (节点数据.hasChildren === false) {
       展开图标.style.visibility = 'hidden'
@@ -156,37 +218,10 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
     }
 
     let 执行展开收起 = async (): Promise<void> => {
-      if (子容器 !== null) {
-        if (节点状态.展开状态 === false) {
-          // 展开
-          if (节点状态.已加载子节点 === false) {
-            let 有子节点 = await this.加载子节点(节点数据.id, 子容器, 层级 + 1)
-            节点状态.已加载子节点 = true
-            if (!有子节点) {
-              展开图标.style.visibility = 'hidden'
-              展开图标.style.pointerEvents = 'none'
-              return
-            }
-          }
-          if (子容器.children.length > 0) {
-            子容器.style.display = 'flex'
-            子容器.style.height = 'auto'
-            子容器.style.gap = '2px'
-            子容器.style.marginTop = '2px'
-            展开图标.textContent = '▼'
-            展开图标.style.transform = 'rotate(0deg)'
-            节点状态.展开状态 = true
-          }
-        } else {
-          // 收起
-          子容器.style.gap = '0'
-          子容器.style.marginTop = '0'
-          子容器.style.height = '0'
-          子容器.style.display = 'none'
-          展开图标.textContent = '▶'
-          展开图标.style.transform = 'rotate(0deg)'
-          节点状态.展开状态 = false
-        }
+      if (节点状态.展开状态 === false) {
+        await this.执行节点展开(节点状态)
+      } else {
+        this.执行节点收起(节点状态)
       }
     }
 
@@ -196,12 +231,20 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
       await 执行展开收起()
     })
 
+    // 节点图标
+    let 节点图标 = document.createElement('span')
+    节点图标.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M1.5 3.5a1 1 0 0 1 1-1h3.7l1.3 1.5h7a1 1 0 0 1 1 1v8.5a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1v-10z"/></svg>`
+    节点图标.style.display = 'flex'
+    节点图标.style.alignItems = 'center'
+    节点图标.style.justifyContent = 'center'
+    节点图标.style.marginRight = '6px'
+    节点图标.style.color = 'var(--次要文字颜色)'
+
     // 名称
     let 名称 = document.createElement('span')
     名称.textContent = 节点数据.name ?? '(未命名概念)'
-    名称.style.fontWeight = 'bold'
-    名称.style.marginLeft = '4px'
     名称.style.flex = '1'
+    名称.style.fontSize = '13.5px'
 
     // 数量
     let 数量 = document.createElement('span')
@@ -211,6 +254,7 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
     数量.style.marginLeft = '6px'
 
     标题行.appendChild(展开图标)
+    标题行.appendChild(节点图标)
     标题行.appendChild(名称)
     标题行.appendChild(数量)
     节点容器.appendChild(标题行)
@@ -263,6 +307,86 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
     } catch (err) {
       console.error(err)
       return false
+    }
+  }
+
+  private async 执行节点展开(状态: 树节点UI状态): Promise<void> {
+    if (状态.展开状态) return
+    if (状态.子容器 !== null) {
+      if (状态.已加载子节点 === false) {
+        let 有子节点 = await this.加载子节点(状态.数据.id, 状态.子容器, 状态.层级 + 1)
+        状态.已加载子节点 = true
+        if (!有子节点) {
+          let 标题行 = 状态.DOM元素.firstElementChild as HTMLElement | null
+          if (标题行 !== null) {
+            let 展开图标 = 标题行.firstElementChild as HTMLElement | null
+            if (展开图标 !== null) {
+              展开图标.style.visibility = 'hidden'
+              展开图标.style.pointerEvents = 'none'
+            }
+          }
+          return
+        }
+      }
+      if (状态.子容器.children.length > 0) {
+        状态.子容器.style.display = 'flex'
+        状态.子容器.style.height = 'auto'
+        状态.子容器.style.gap = '2px'
+        状态.子容器.style.marginTop = '2px'
+        let 标题行 = 状态.DOM元素.firstElementChild as HTMLElement | null
+        if (标题行 !== null) {
+          let 展开图标 = 标题行.firstElementChild as HTMLElement | null
+          if (展开图标 !== null) {
+            展开图标.style.transform = 'rotate(90deg)'
+          }
+        }
+        状态.展开状态 = true
+      }
+    }
+  }
+
+  private 执行节点收起(状态: 树节点UI状态): void {
+    if (!状态.展开状态) return
+    if (状态.子容器 !== null) {
+      状态.子容器.style.gap = '0'
+      状态.子容器.style.marginTop = '0'
+      状态.子容器.style.height = '0'
+      状态.子容器.style.display = 'none'
+      let 标题行 = 状态.DOM元素.firstElementChild as HTMLElement | null
+      if (标题行 !== null) {
+        let 展开图标 = 标题行.firstElementChild as HTMLElement | null
+        if (展开图标 !== null && 状态.数据.hasChildren !== false) {
+          展开图标.style.transform = 'rotate(0deg)'
+        }
+      }
+      状态.展开状态 = false
+    }
+  }
+
+  private 折叠全部(): void {
+    for (let 状态 of this.节点状态映射.values()) {
+      if (状态.展开状态) {
+        this.执行节点收起(状态)
+      }
+    }
+  }
+
+  private async 展开全部(): Promise<void> {
+    let 还需要展开 = true
+    while (还需要展开) {
+      还需要展开 = false
+      let 当前所有的状态 = Array.from(this.节点状态映射.values())
+
+      let 展开的任务: Promise<void>[] = []
+      for (let 状态 of 当前所有的状态) {
+        if (!状态.展开状态 && 状态.数据.hasChildren !== false) {
+          展开的任务.push(this.执行节点展开(状态))
+          还需要展开 = true
+        }
+      }
+      if (展开的任务.length > 0) {
+        await Promise.all(展开的任务)
+      }
     }
   }
 
@@ -323,8 +447,7 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
               if (标题行 !== null) {
                 let 展开图标 = 标题行.firstElementChild as HTMLElement | null
                 if (展开图标 !== null) {
-                  展开图标.textContent = '▼'
-                  展开图标.style.transform = 'rotate(0deg)'
+                  展开图标.style.transform = 'rotate(90deg)'
                 }
               }
               状态.展开状态 = true

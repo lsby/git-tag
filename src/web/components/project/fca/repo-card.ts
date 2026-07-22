@@ -306,7 +306,7 @@ export class 仓库卡片组件 extends 组件基类<发出事件类型, 监听�
     let addBtn = 创建元素('button', {
       style: {
         border: 'none',
-        background: 'transparent',
+        background: 'rgba(128,128,128,0.1)',
         cursor: 'pointer',
         color: 'var(--次要文字颜色)',
         fontSize: '12px',
@@ -315,12 +315,14 @@ export class 仓库卡片组件 extends 组件基类<发出事件类型, 监听�
         transition: 'all 0.2s',
       },
       onmouseover: (e) => {
-        let el = e.target as HTMLElement
+        let el = e.currentTarget as HTMLElement
         el.style.color = '#58a6ff'
+        el.style.background = 'rgba(56,139,253,0.15)'
       },
       onmouseout: (e) => {
-        let el = e.target as HTMLElement
+        let el = e.currentTarget as HTMLElement
         el.style.color = 'var(--次要文字颜色)'
+        el.style.background = 'rgba(128,128,128,0.1)'
       },
     })
     addBtn.innerHTML =

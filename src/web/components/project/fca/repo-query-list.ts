@@ -1,5 +1,6 @@
 import { 组件基类 } from '../../../base/base'
 import { API管理器 } from '../../../global/manager/api-manager'
+import { 显示确认对话框 } from '../../../global/manager/dialog-manager'
 import { 创建元素 } from '../../../global/tools/create-element'
 import { 仓库卡片数据, 仓库卡片组件 } from './repo-card'
 import { 展示批量修改标签弹窗 } from './repo-query-batch-tags'
@@ -70,6 +71,20 @@ export class 仓库查询列表组件 extends 组件基类<发出事件类型, �
         this.上次点击的仓库ID = null
         this.更新卡片选中样式()
       },
+      根据筛选条件移除或重绘卡片: (数据: 仓库卡片数据): void => {
+        let visibility = this.状态.visibility
+        if (visibility === 'Public' && 数据.isPrivate) {
+          this.从界面移除卡片([数据.id])
+          this.选中的仓库IDs.delete(数据.id)
+          this.更新卡片选中样式()
+        } else if (visibility === 'Private' && !数据.isPrivate) {
+          this.从界面移除卡片([数据.id])
+          this.选中的仓库IDs.delete(数据.id)
+          this.更新卡片选中样式()
+        } else {
+          this.重绘卡片数据(数据)
+        }
+      },
     },
   )
 
@@ -80,6 +95,84 @@ export class 仓库查询列表组件 extends 组件基类<发出事件类型, �
 
   private 正在加载下一页 = false
   private 防抖定时器: number | null = null
+  private 全选正在执行 = false
+
+  private 键盘快捷键监听器 = async (e: KeyboardEvent): Promise<void> => {
+    // 确保当前组件已连接到 DOM 且可见
+    if (!this.isConnected || this.获得宿主样式().display === 'none') return
+
+    // 如果在一个输入框里，不要拦截，让其保留原有的全选行为
+    let target = e.target as HTMLElement | null
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
+
+    if (e.ctrlKey && e.key.toLowerCase() === 'a') {
+      e.preventDefault()
+
+      if (this.全选正在执行) return
+      this.全选正在执行 = true
+
+      try {
+        let 已加载数量 = this.当前显示的卡片数据.length
+        let 总数量 = this.状态.total
+
+        if (已加载数量 < 总数量) {
+          let 还需要加载 = 总数量 - 已加载数量
+          if (还需要加载 > 100) {
+            let 确定 = await 显示确认对话框(
+              `还有 ${还需要加载} 个仓库未加载，全选将加载所有剩余数据。\n如果数量过多可能会导致页面卡顿，确定要继续吗？`,
+            )
+            if (!确定) return
+          }
+
+          let 提示容器 = document.createElement('div')
+          提示容器.style.position = 'absolute'
+          提示容器.style.top = '0'
+          提示容器.style.left = '0'
+          提示容器.style.right = '0'
+          提示容器.style.bottom = '0'
+          提示容器.style.background = 'rgba(0,0,0,0.3)'
+          提示容器.style.display = 'flex'
+          提示容器.style.alignItems = 'center'
+          提示容器.style.justifyContent = 'center'
+          提示容器.style.zIndex = '9999'
+
+          let 提示文字 = document.createElement('div')
+          提示文字.style.background = 'var(--主要背景颜色)'
+          提示文字.style.padding = '20px 30px'
+          提示文字.style.borderRadius = '8px'
+          提示文字.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'
+          提示文字.style.color = 'var(--文本颜色)'
+          提示文字.textContent = `正在加载全部数据...`
+          提示容器.appendChild(提示文字)
+
+          this.shadow.appendChild(提示容器)
+
+          try {
+            while (this.状态.page * this.状态.pageSize < this.状态.total) {
+              if (this.正在加载下一页) {
+                await new Promise((r) => setTimeout(r, 100))
+                continue
+              }
+              this.正在加载下一页 = true
+              this.状态.page += 1
+              提示文字.textContent = `正在加载全部数据... (${this.当前显示的卡片数据.length}/${总数量})`
+              await this.加载数据(true)
+              this.正在加载下一页 = false
+            }
+          } finally {
+            if (this.shadow.contains(提示容器)) {
+              this.shadow.removeChild(提示容器)
+            }
+          }
+        }
+
+        this.当前显示的卡片数据.forEach((i) => this.选中的仓库IDs.add(i.id))
+        this.更新卡片选中样式()
+      } finally {
+        this.全选正在执行 = false
+      }
+    }
+  }
 
   private 用户手动修改筛选(): void {
     window.dispatchEvent(new CustomEvent('fca-tree-clear-selection'))
@@ -163,6 +256,7 @@ export class 仓库查询列表组件 extends 组件基类<发出事件类型, �
     this.获得宿主样式().display = 'flex'
     this.获得宿主样式().flexDirection = 'column'
     this.获得宿主样式().height = '100%'
+    this.获得宿主样式().position = 'relative'
 
     let 搜索容器 = 创建元素('div', {
       style: {
@@ -210,7 +304,13 @@ export class 仓库查询列表组件 extends 组件基类<发出事件类型, �
       }
     })
 
+    window.addEventListener('keydown', this.键盘快捷键监听器)
+
     await this.加载数据(false)
+  }
+
+  protected override async 当卸载时(): Promise<void> {
+    window.removeEventListener('keydown', this.键盘快捷键监听器)
   }
 
   private async 加载数据(追加数据 = false): Promise<void> {

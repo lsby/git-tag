@@ -28,6 +28,7 @@ export class 仓库查询右键菜单 {
       展示批量修改标签: () => void
       从界面移除卡片: (ids: string[]) => void
       清空选中: () => void
+      根据筛选条件移除或重绘卡片: (数据: 仓库卡片数据) => void
     },
   ) {
     window.addEventListener('click', () => {
@@ -335,6 +336,23 @@ export class 仓库查询右键菜单 {
         }
       })
       this.菜单元素.appendChild(编辑简介)
+
+      let 设置公有私有 = this.创建菜单项(_当前仓库.isPrivate ? '设为公开' : '设为私有', async () => {
+        let 确认 = await 显示确认对话框(
+          `确定要将仓库设置为${_当前仓库.isPrivate ? '公开' : '私有'}吗？\n注意: 此操作会同步修改 GitHub 上的仓库状态，请谨慎操作。`,
+        )
+        if (确认) {
+          let 新状态 = !_当前仓库.isPrivate
+          await API管理器.请求postJson并处理错误('/api/project/repo/update-info', {
+            id: _当前仓库.id,
+            is_private: 新状态,
+          })
+          _当前仓库.isPrivate = 新状态
+          成功提示(`已设置为${新状态 ? '私有' : '公开'}`)
+          this.回调.根据筛选条件移除或重绘卡片(_当前仓库)
+        }
+      })
+      this.菜单元素.appendChild(设置公有私有)
     }
 
     let 修改标签 = this.创建菜单项('修改标签', () => {

@@ -49,6 +49,8 @@ export async function 展示批量修改标签弹窗(
       flexWrap: 'wrap',
       gap: '8px',
       minHeight: '80px',
+      maxHeight: '300px',
+      overflowY: 'auto',
       padding: '12px',
       background: 'var(--次要背景颜色)',
       borderRadius: '6px',
@@ -201,7 +203,7 @@ export async function 展示批量修改标签弹窗(
   container.appendChild(addRow)
   container.appendChild(submitBtn)
 
-  await 显示模态框({ 标题: '批量修改标签', 可关闭: true, 宽度: '500px' }, container)
+  await 显示模态框({ 标题: '批量修改标签', 可关闭: true, 宽度: '500px', 高度: 'auto' }, container)
   setTimeout(() => {
     input.聚焦()
   }, 100)

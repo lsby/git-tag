@@ -14,7 +14,12 @@ let 接口逻辑实现 = 接口逻辑
     接口逻辑.构造(
       [
         new JSON参数解析插件(
-          z.object({ id: z.string(), full_name: z.string().optional(), description: z.string().optional() }),
+          z.object({
+            id: z.string(),
+            full_name: z.string().optional(),
+            description: z.string().optional(),
+            is_private: z.boolean().optional(),
+          }),
           {},
         ),
         kysely插件,
@@ -48,6 +53,9 @@ let 接口逻辑实现 = 接口逻辑
         if (参数.json.description !== undefined) {
           updateData.description = 参数.json.description
         }
+        if (参数.json.is_private !== undefined) {
+          updateData.is_private = 参数.json.is_private ? 1 : 0
+        }
 
         if (Object.keys(updateData).length > 0) {
           if (repoInfo.provider_type.toLowerCase() === 'github') {
@@ -58,6 +66,9 @@ let 接口逻辑实现 = 接口逻辑
             }
             if (参数.json.description !== undefined) {
               githubApiData.description = 参数.json.description
+            }
+            if (参数.json.is_private !== undefined) {
+              githubApiData.private = 参数.json.is_private
             }
 
             let res = await fetch(`https://api.github.com/repos/${repoInfo.full_name}`, {
