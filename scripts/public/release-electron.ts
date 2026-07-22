@@ -86,12 +86,12 @@ async function 执行构建(): Promise<void> {
     let runCmd内容 = [
       '@echo off',
       'chcp 65001 >nul',
-      'echo 正在启动 lsby-playground-ts-service (Electron模式) ...',
+      'echo 正在启动 lsby-git-tag (Electron模式) ...',
       'echo.',
       'cd /d "%~dp0"',
       'set "ENV_FILE_PATH=.env/.env.production-electron"',
-      'set "DEBUG=@lsby:*,@lsby:playground-ts-service:*"',
-      'start /wait "" "lsby-playground-ts-service.exe"',
+      'set "DEBUG=@lsby:*,@lsby:git-tag:*"',
+      'start /wait "" "lsby-git-tag.exe"',
       'if errorlevel 1 (',
       '  echo.',
       '  echo 程序异常退出, 按任意键关闭...',
@@ -99,21 +99,21 @@ async function 执行构建(): Promise<void> {
       ')',
     ].join('\r\n')
 
-    let runCmd路径 = path.join(生成目录, 'lsby-playground-ts-service-debug.cmd')
+    let runCmd路径 = path.join(生成目录, 'lsby-git-tag-debug.cmd')
     fs.writeFileSync(runCmd路径, runCmd内容, { encoding: 'utf8' })
     console.log(`✅ 已生成 ${runCmd路径}`)
 
     // 生成 start.exe (C# 引导器)
     let cscPath = 寻找内置Csc编译器()
     let launcher源文件 = path.join(__当前目录名, 'launcher', 'launcher.cs')
-    let runExe路径 = path.join(生成目录, 'lsby-playground-ts-service-start.exe')
+    let runExe路径 = path.join(生成目录, 'lsby-git-tag-start.exe')
 
     if (cscPath === null || fs.existsSync(cscPath) === false) {
-      console.warn(`⚠️ 未找到 C# 编译器，跳过 lsby-playground-ts-service-start.exe 的编译。`)
+      console.warn(`⚠️ 未找到 C# 编译器，跳过 lsby-git-tag-start.exe 的编译。`)
     } else if (fs.existsSync(launcher源文件) === false) {
-      console.warn(`⚠️ 未找到引导器源码: ${launcher源文件}，跳过 lsby-playground-ts-service-start.exe 的编译。`)
+      console.warn(`⚠️ 未找到引导器源码: ${launcher源文件}，跳过 lsby-git-tag-start.exe 的编译。`)
     } else {
-      console.log('✅ 正在编译引导器 lsby-playground-ts-service-start.exe ...')
+      console.log('✅ 正在编译引导器 lsby-git-tag-start.exe ...')
       try {
         // 使用 /target:exe 避免控制台流异常
         execSync(

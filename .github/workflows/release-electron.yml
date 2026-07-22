@@ -34,12 +34,12 @@ jobs:
 
       - name: Rename and Zip
         run: |
-          Rename-Item -Path "release\electron\win-unpacked" -NewName "lsby-playground-ts-service-windows"
-          Compress-Archive -Path "release\electron\lsby-playground-ts-service-windows" -DestinationPath "lsby-playground-ts-service-windows.zip"
+          Rename-Item -Path "release\electron\win-unpacked" -NewName "lsby-git-tag-windows"
+          Compress-Archive -Path "release\electron\lsby-git-tag-windows" -DestinationPath "lsby-git-tag-windows.zip"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: lsby-playground-ts-service-windows.zip
+          files: lsby-git-tag-windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -73,7 +73,7 @@ async function 执行构建(): Promise<void> {
 
     console.log('[5/9] 正在准备可执行文件...')
     let Node可执行文件 = process.execPath
-    let 目标可执行文件 = path.join(发布目录, 'lsby-playground-ts-service.exe')
+    let 目标可执行文件 = path.join(发布目录, 'lsby-git-tag.exe')
     fs.copyFileSync(Node可执行文件, 目标可执行文件)
 
     console.log('[6/9] 正在移除 Windows 代码签名...')
@@ -116,12 +116,12 @@ async function 执行构建(): Promise<void> {
     let 启动脚本内容 = [
       '@echo off',
       'chcp 65001 >nul',
-      'echo 正在启动 lsby-playground-ts-service ...',
+      'echo 正在启动 lsby-git-tag ...',
       'echo.',
       'cd /d "%~dp0"',
       'set "ENV_FILE_PATH=./.env/.env.production-sea"',
-      'set "DEBUG=@lsby:*,@lsby:playground-ts-service:*"',
-      'lsby-playground-ts-service.exe',
+      'set "DEBUG=@lsby:*,@lsby:git-tag:*"',
+      'lsby-git-tag.exe',
       'if errorlevel 1 (',
       '  echo.',
       '  echo 程序异常退出, 按任意键关闭...',

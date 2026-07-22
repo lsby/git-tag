@@ -1,6 +1,6 @@
 services:
   app:
-    image: lsby-playground-ts-service-prod
+    image: lsby-git-tag-prod
     build:
       context: ../../
       dockerfile: ./deploy/production/dockerfile
