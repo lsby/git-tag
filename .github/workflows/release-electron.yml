@@ -1,0 +1,47 @@
+name: Build and Release Electron
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Generate Database
+        run: pnpm run db:push:prod:electron
+
+      - name: Build Electron App
+        run: pnpm run public:electron
+
+      - name: Rename and Zip
+        run: |
+          Rename-Item -Path "release\electron\win-unpacked" -NewName "lsby-playground-ts-service-windows"
+          Compress-Archive -Path "release\electron\lsby-playground-ts-service-windows" -DestinationPath "lsby-playground-ts-service-windows.zip"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: lsby-playground-ts-service-windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
