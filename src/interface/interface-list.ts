@@ -50,6 +50,7 @@ import _src_interface_project_repo_search_index_ts from './project/repo/search/i
 import _src_interface_project_repo_unignore_index_ts from './project/repo/unignore/index'
 import _src_interface_project_repo_update_info_index_ts from './project/repo/update-info/index'
 import _src_interface_project_repo_update_tags_index_ts from './project/repo/update-tags/index'
+import _src_interface_project_tag_search_index_ts from './project/tag/search/index'
 import _src_interface_system_get_enable_registration_index_ts from './system/get-enable-registration/index'
 import _src_interface_system_get_interface_type_index_ts from './system/get-interface-type/index'
 import _src_interface_system_get_system_config_index_ts from './system/get-system-config/index'
@@ -111,6 +112,7 @@ export let interfaceApiList: 任意接口[] = [
   _src_interface_project_repo_unignore_index_ts,
   _src_interface_project_repo_update_info_index_ts,
   _src_interface_project_repo_update_tags_index_ts,
+  _src_interface_project_tag_search_index_ts,
   _src_interface_system_get_enable_registration_index_ts,
   _src_interface_system_get_interface_type_index_ts,
   _src_interface_system_get_system_config_index_ts,

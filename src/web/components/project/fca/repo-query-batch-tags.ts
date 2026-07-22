@@ -113,15 +113,153 @@ export async function 展示批量修改标签弹窗(
     input.聚焦()
   }
 
-  let addRow = 创建元素('div', { style: { display: 'flex', gap: '8px' } })
-  let input = new 普通输入框({
-    占位符: '输入要添加的标签 (支持逗号分隔多个)',
-    宿主样式: { flex: '1' },
-    回车处理函数: 添加标签逻辑,
-  })
+  let addRow = 创建元素('div', { style: { display: 'flex', gap: '8px', position: 'relative' } })
+  let input = new 普通输入框({ 占位符: '输入要添加的标签 (支持逗号分隔多个)', 宿主样式: { flex: '1' } })
   let addBtn = new 普通按钮({ 文本: '添加', 点击处理函数: 添加标签逻辑 })
   addRow.appendChild(input)
   addRow.appendChild(addBtn)
+
+  let suggestionList = 创建元素('div', {
+    style: {
+      position: 'absolute',
+      bottom: '100%',
+      left: '0',
+      width: 'calc(100% - 70px)',
+      maxHeight: '200px',
+      overflowY: 'auto',
+      backgroundColor: 'var(--主要背景颜色)',
+      border: '1px solid var(--边框颜色)',
+      borderRadius: '4px',
+      boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+      zIndex: '100',
+      display: 'none',
+      flexDirection: 'column',
+      marginBottom: '4px',
+    },
+  })
+  addRow.appendChild(suggestionList)
+
+  let isComposing = false
+  let currentSuggestions: string[] = []
+  let selectedIndex = -1
+  let searchTimeout: number | null = null
+
+  let renderSuggestions = (): void => {
+    suggestionList.innerHTML = ''
+    if (currentSuggestions.length === 0) {
+      suggestionList.style.display = 'none'
+      return
+    }
+    suggestionList.style.display = 'flex'
+    currentSuggestions.forEach((tag, index) => {
+      let item = 创建元素('div', {
+        style: {
+          padding: '8px 12px',
+          cursor: 'pointer',
+          backgroundColor: index === selectedIndex ? 'var(--次要背景颜色)' : 'transparent',
+          color: 'var(--文本颜色)',
+          fontSize: '13px',
+        },
+        onclick: () => applySuggestion(tag),
+      })
+      item.onmouseenter = (): void => {
+        selectedIndex = index
+        renderSuggestions()
+      }
+      item.textContent = tag
+      suggestionList.appendChild(item)
+    })
+  }
+
+  let applySuggestion = (tag: string): void => {
+    let val = input.获得值()
+    let lastCommaIdx = val.lastIndexOf(',')
+    if (lastCommaIdx !== -1) {
+      input.设置值(val.substring(0, lastCommaIdx + 1) + tag + ',')
+    } else {
+      input.设置值(tag + ',')
+    }
+    currentSuggestions = []
+    selectedIndex = -1
+    renderSuggestions()
+    input.聚焦()
+  }
+
+  let triggerSearch = async (): Promise<void> => {
+    if (isComposing) return
+    let val = input.获得值()
+    let lastCommaIdx = val.lastIndexOf(',')
+    let keyword = lastCommaIdx !== -1 ? val.substring(lastCommaIdx + 1).trim() : val.trim()
+
+    if (keyword === '') {
+      currentSuggestions = []
+      selectedIndex = -1
+      renderSuggestions()
+      return
+    }
+
+    try {
+      let res = await API管理器.请求postJson并处理错误('/api/project/tag/search', { keyword })
+      currentSuggestions = res.tags
+      selectedIndex = -1
+      renderSuggestions()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  input.addEventListener('compositionstart', () => {
+    isComposing = true
+  })
+  input.addEventListener('compositionend', () => {
+    isComposing = false
+    void triggerSearch()
+  })
+
+  input.addEventListener('input', () => {
+    if (searchTimeout !== null) window.clearTimeout(searchTimeout)
+    searchTimeout = window.setTimeout(() => {
+      void triggerSearch()
+    }, 100)
+  })
+
+  input.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.isComposing) return
+
+    if (e.key === 'ArrowDown') {
+      if (currentSuggestions.length > 0) {
+        e.preventDefault()
+        selectedIndex = (selectedIndex + 1) % currentSuggestions.length
+        renderSuggestions()
+      }
+    } else if (e.key === 'ArrowUp') {
+      if (currentSuggestions.length > 0) {
+        e.preventDefault()
+        selectedIndex = (selectedIndex - 1 + currentSuggestions.length) % currentSuggestions.length
+        renderSuggestions()
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (currentSuggestions.length > 0 && selectedIndex !== -1) {
+        let selected = currentSuggestions[selectedIndex]
+        if (selected !== undefined) {
+          e.stopPropagation()
+          applySuggestion(selected)
+        } else {
+          添加标签逻辑()
+        }
+      } else {
+        添加标签逻辑()
+      }
+    }
+  })
+
+  document.addEventListener('click', (e) => {
+    if (!addRow.contains(e.target as Node)) {
+      currentSuggestions = []
+      renderSuggestions()
+    }
+  })
 
   let submitBtn = new 主要按钮({
     文本: '保存并同步',
