@@ -6,7 +6,7 @@ import { z } from 'zod'
 let 项目根目录 = resolve(import.meta.dirname, '../../')
 
 let 执行命令 = (命令: string, 描述: string): void => {
-  console.log(`\n📦 ${描述}...`)
+  console.log(`📦 ${描述}...`)
   try {
     execSync(命令, { cwd: 项目根目录, stdio: 'inherit', shell: process.platform === 'win32' ? 'cmd.exe' : 'bash' })
     console.log(`✅ ${描述}完成`)
