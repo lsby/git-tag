@@ -68,6 +68,9 @@ importers:
       node-sqlite3-wasm:
         specifier: ^0.8.52
         version: 0.8.52
+      open:
+        specifier: ^11.0.0
+        version: 11.0.0
       pinyin-pro:
         specifier: ^3.28.2
         version: 3.28.2
@@ -168,9 +171,6 @@ importers:
       nodemon:
         specifier: ^3.1.11
         version: 3.1.11
-      open:
-        specifier: ^11.0.0
-        version: 11.0.0
       open-cli:
         specifier: ^8.0.0
         version: 8.0.0

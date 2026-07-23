@@ -36,17 +36,17 @@ namespace LsbyLauncher
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             Console.WriteLine("==================================================");
-            Console.WriteLine("lsby-playground-ts-service 启动引导器");
+            Console.WriteLine("lsby-git-tag 启动引导器");
             Console.WriteLine("==================================================");
 
             // 2. 准备托盘图标
             NotifyIcon trayIcon = new NotifyIcon();
-            trayIcon.Text = "Playground Service";
+            trayIcon.Text = "git-tag Service";
             trayIcon.Visible = true;
 
             // 尝试读取应用本身的图标，失败则用默认图标
             try {
-                trayIcon.Icon = Icon.ExtractAssociatedIcon("lsby-playground-ts-service.exe");
+                trayIcon.Icon = Icon.ExtractAssociatedIcon("lsby-git-tag.exe");
             } catch {
                 trayIcon.Icon = SystemIcons.Application;
             }
@@ -72,10 +72,10 @@ namespace LsbyLauncher
 
             // 3. 准备启动 Electron 进程
             Environment.SetEnvironmentVariable("ENV_FILE_PATH", ".env/.env.production-electron");
-            Environment.SetEnvironmentVariable("DEBUG", "@lsby:*,@lsby:playground-ts-service:*");
+            Environment.SetEnvironmentVariable("DEBUG", "@lsby:*,@lsby:git-tag:*");
 
             Process electronProcess = new Process();
-            electronProcess.StartInfo.FileName = "lsby-playground-ts-service.exe";
+            electronProcess.StartInfo.FileName = "lsby-git-tag.exe";
             electronProcess.StartInfo.UseShellExecute = false; // 继承当前引导器的控制台句柄，这样日志会打印到我们的黑框里
 
             exitMenuItem.Click += (s, e) =>
@@ -113,7 +113,7 @@ namespace LsbyLauncher
             {
                 ShowWindow(consoleWindow, SW_SHOW);
                 Console.WriteLine("\n[引导器错误] 启动失败: " + ex.Message);
-                Console.WriteLine("确保 lsby-playground-ts-service.exe 存在于同级目录。");
+                Console.WriteLine("确保 lsby-git-tag.exe 存在于同级目录。");
                 Console.WriteLine("按任意键关闭...");
                 Console.ReadKey();
                 trayIcon.Visible = false;
