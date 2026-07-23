@@ -1,4 +1,4 @@
-name: Build and Release Electron
+name: Build and Release Electron Windows
 
 on:
   push:
