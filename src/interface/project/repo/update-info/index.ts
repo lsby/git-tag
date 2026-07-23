@@ -63,6 +63,7 @@ let 接口逻辑实现 = 接口逻辑
             if (参数.json.full_name !== undefined) {
               let parts = 参数.json.full_name.split('/')
               githubApiData.name = parts.length > 1 ? parts[1] : 参数.json.full_name
+              updateData.url = `https://github.com/${参数.json.full_name}`
             }
             if (参数.json.description !== undefined) {
               githubApiData.description = 参数.json.description

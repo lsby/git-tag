@@ -310,13 +310,22 @@ export class 仓库查询右键菜单 {
     if (选中的数量 === 1 && 当前仓库 !== undefined) {
       let _当前仓库 = 当前仓库
       let 编辑名称 = this.创建菜单项('编辑名称', async () => {
-        let 新名称 = await 显示输入对话框('请输入新的仓库名称', _当前仓库.fullName)
+        let 新名称 = await 显示输入对话框(
+          '请输入新的仓库名称',
+          _当前仓库.fullName,
+          undefined,
+          '我已知晓此操作会同步修改远程仓库名称, 这会导致url变化',
+        )
         if (新名称 !== null && 新名称 !== _当前仓库.fullName) {
           await API管理器.请求postJson并处理错误('/api/project/repo/update-info', {
             id: _当前仓库.id,
             full_name: 新名称,
           })
+          let 旧名称 = _当前仓库.fullName
           _当前仓库.fullName = 新名称
+          if (_当前仓库.url.endsWith(旧名称)) {
+            _当前仓库.url = _当前仓库.url.substring(0, _当前仓库.url.length - 旧名称.length) + 新名称
+          }
           成功提示('名称已更新')
           this.回调.重绘卡片(_当前仓库)
         }

@@ -174,7 +174,12 @@ export function 显示确认对话框(消息: string, 提示?: string): Promise<
   })
 }
 
-export function 显示输入对话框(消息: string, 默认值?: string, 提示?: string): Promise<string | null> {
+export function 显示输入对话框(
+  消息: string,
+  默认值?: string,
+  提示?: string,
+  危险警告信息?: string,
+): Promise<string | null> {
   return new Promise((resolve) => {
     let 遮罩层 = 创建元素('div', {
       style: {
@@ -229,6 +234,21 @@ export function 显示输入对话框(消息: string, 默认值?: string, 提示
 
     对话框.appendChild(输入框)
 
+    let 危险选项勾选框: HTMLInputElement | undefined
+    if (危险警告信息 !== undefined) {
+      let 危险选项容器 = 创建元素('label', {
+        style: { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px' },
+      })
+      危险选项勾选框 = 创建元素('input', { type: 'checkbox' })
+      let 危险选项文字 = 创建元素('span', {
+        textContent: 危险警告信息,
+        style: { fontSize: '13px', color: 'var(--警告颜色)', fontWeight: 'bold' },
+      })
+      危险选项容器.appendChild(危险选项勾选框)
+      危险选项容器.appendChild(危险选项文字)
+      对话框.appendChild(危险选项容器)
+    }
+
     let 按钮容器 = 创建元素('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: '8px' } })
 
     let 关闭对话框 = (结果: string | null): void => {
@@ -246,24 +266,29 @@ export function 显示输入对话框(消息: string, 默认值?: string, 提示
 
     let 确定按钮 = new 主要按钮({
       文本: '确定',
+      禁用: 危险警告信息 !== undefined,
+      ...(危险警告信息 !== undefined ? { 元素样式: { backgroundColor: 'var(--警告颜色)' } } : {}),
       点击处理函数: (): void => {
         关闭对话框(输入框.获得值())
       },
     })
 
+    if (危险选项勾选框 !== undefined) {
+      危险选项勾选框.onchange = (): void => {
+        确定按钮.设置禁用(!危险选项勾选框.checked)
+      }
+    }
+
     let 键盘处理 = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
         关闭对话框(null)
       } else if (event.key === 'Enter' && !event.isComposing) {
+        if (危险选项勾选框 !== undefined && !危险选项勾选框.checked) {
+          return // 如果有危险警告且未勾选，不响应回车
+        }
         关闭对话框(输入框.获得值())
       }
     }
-
-    // 遮罩层.onclick = (event: MouseEvent): void => {
-    //   if (event.target === 遮罩层) {
-    //     关闭对话框(null)
-    //   }
-    // }
 
     // 支持 ESC 键取消
     document.onkeydown = 键盘处理
