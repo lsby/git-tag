@@ -23,7 +23,7 @@ export class 仓库查询列表组件 extends 组件基类<发出事件类型, �
     hasTags: 'All',
     visibility: 'All',
     isFork: 'All',
-    sort: 'stars',
+    sort: 'updated_at',
     order: 'desc',
     page: 1,
     pageSize: 10,

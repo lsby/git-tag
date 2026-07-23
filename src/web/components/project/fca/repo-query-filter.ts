@@ -96,7 +96,7 @@ export class 仓库查询过滤栏 {
         { 值: 'updated_at', 文本: '更新时间' },
         { 值: 'full_name', 文本: '仓库名' },
       ],
-      值: 'stars',
+      值: 'updated_at',
       变化处理函数: (值): void => {
         this.状态.sort = 值 as 'updated_at' | 'full_name' | 'stars'
         this.触发搜索()
@@ -167,7 +167,7 @@ export class 仓库查询过滤栏 {
         this.状态.hasTags = 'All'
         this.状态.visibility = 'All'
         this.状态.isFork = 'All'
-        this.状态.sort = 'stars'
+        this.状态.sort = 'updated_at'
         this.状态.order = 'desc'
 
         this.同步界面到状态()

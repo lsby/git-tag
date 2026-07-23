@@ -8,6 +8,7 @@ import {
   计算接口逻辑错误结果,
 } from '@lsby/net-core'
 import { Right } from '@lsby/ts-fp-data'
+import { sql } from 'kysely'
 import { z } from 'zod'
 import { jwt插件, kysely插件 } from '../../../../global/plugin'
 import { 检查登录 } from '../../../../interface-logic/check/check-login-jwt'
@@ -26,7 +27,7 @@ let 接口逻辑实现 = 接口逻辑
             keyword: z.string().optional(),
             tags: z.array(z.string()).optional(),
             visibility: z.enum(['All', 'Public', 'Private']).optional().default('All'),
-            sort: z.enum(['stars', 'updated_at', 'full_name']).optional().default('stars'),
+            sort: z.enum(['stars', 'updated_at', 'full_name']).optional().default('updated_at'),
             order: z.enum(['desc', 'asc']).optional().default('desc'),
             hasTags: z.enum(['All', 'Yes', 'No']).optional().default('All'),
             isFork: z.enum(['All', 'Yes', 'No']).optional().default('All'),
@@ -117,7 +118,17 @@ let 接口逻辑实现 = 接口逻辑
         // Paginate
         let limit = pageSize
         let offset = (page - 1) * pageSize
-        let itemsQuery = query.selectAll().orderBy(参数.json.sort, 参数.json.order).limit(limit).offset(offset)
+        let itemsQuery =
+          参数.json.sort === 'updated_at'
+            ? query
+                .selectAll()
+                .orderBy(
+                  sql`coalesce(json_extract(raw_data, '$.pushed_at'), json_extract(raw_data, '$.updated_at'), git_repo.updated_at)`,
+                  参数.json.order,
+                )
+                .limit(limit)
+                .offset(offset)
+            : query.selectAll().orderBy(参数.json.sort, 参数.json.order).limit(limit).offset(offset)
 
         let repoRows = await itemsQuery.execute()
 
