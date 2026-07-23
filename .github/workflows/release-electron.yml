@@ -35,8 +35,7 @@ jobs:
       - name: Rename and Zip
         run: |
           $TAG_NAME = "${{ github.ref_name }}"
-          Rename-Item -Path "release\electron\win-unpacked" -NewName "lsby-git-tag-$TAG_NAME-windows"
-          Compress-Archive -Path "release\electron\lsby-git-tag-$TAG_NAME-windows" -DestinationPath "lsby-git-tag-$TAG_NAME-windows.zip"
+          Compress-Archive -Path "release\electron\win-unpacked\*" -DestinationPath "lsby-git-tag-$TAG_NAME-windows.zip"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
