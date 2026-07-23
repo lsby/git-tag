@@ -1,7 +1,9 @@
 import type { FcaTreeNodeData } from '../../../../interface/project/fca/get-children/types'
 import { 组件基类 } from '../../../base/base'
 import { API管理器 } from '../../../global/manager/api-manager'
+import { 显示模态框 } from '../../../global/manager/modal-manager'
 import { 普通按钮 } from '../../general/base/base-button'
+import { FCA格图查看器 } from './fca-lattice-viewer'
 
 type 发出事件类型 = { 节点选中: { 节点id: string; 节点名称: string } }
 type 监听事件类型 = {}
@@ -139,6 +141,16 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
       元素样式: { padding: '4px 8px', fontSize: '12px', outline: 'none' },
     })
     按钮容器.appendChild(折叠全部按钮)
+
+    let 查看格图按钮 = new 普通按钮({
+      文本: '格图',
+      点击处理函数: (): void => {
+        void this.显示格图()
+      },
+      宿主样式: { padding: '0' },
+      元素样式: { padding: '4px 8px', fontSize: '12px', outline: 'none' },
+    })
+    按钮容器.appendChild(查看格图按钮)
     工具栏.appendChild(按钮容器)
     this.shadow.appendChild(工具栏)
 
@@ -479,6 +491,17 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
           this.当前选中节点id = 选中的节点id
         }
       }
+    }
+  }
+
+  private async 显示格图(): Promise<void> {
+    try {
+      let 结果 = await this.API管理器.请求postJson并处理错误('/api/project/fca/get-full-lattice', {})
+      let 查看器 = new FCA格图查看器()
+      查看器.设置数据(结果)
+      await 显示模态框({ 标题: 'FCA 概念格图', 最大化: true }, 查看器)
+    } catch (err) {
+      console.error('获取格图数据失败:', err)
     }
   }
 }
