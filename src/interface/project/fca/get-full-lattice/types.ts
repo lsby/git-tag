@@ -1,11 +1,11 @@
 import { NetCoreExportType } from '@lsby/net-core'
 
-export type FcaLatticeNode = { id: string; intent: string[]; extentCount: number; label: string }
+export type FcaLatticeNode = { id: string; intent: string[]; extentCount: number; label: string; repos: string[] }
 
 export type FcaLatticeEdge = { from: string; to: string }
 
 export type FcaLatticeData = {
-  nodes: { id: string; intent: string[]; extentCount: number; label: string }[]
+  nodes: { id: string; intent: string[]; extentCount: number; label: string; repos: string[] }[]
   edges: { from: string; to: string }[]
 }
 

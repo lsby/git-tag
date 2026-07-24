@@ -161,7 +161,7 @@ let 接口逻辑实现 = 接口逻辑
         // 6. 构造返回数据
         let data: FcaTreeNodeData[] = immediateConcepts.map((c): FcaTreeNodeData => {
           let newTags = c.intent.filter((t) => !selectedTags.includes(t))
-          let name = newTags.join(', ')
+          let name = newTags.join(' & ')
           let id = c.intent.join(',')
           let hasChildren = c.maxTagsInAnyRepo > c.intent.length
 

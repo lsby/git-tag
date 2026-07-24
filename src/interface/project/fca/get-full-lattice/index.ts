@@ -21,6 +21,7 @@ let FcaLatticeNodeSchema: z.ZodType<FcaLatticeNode> = z.object({
   intent: z.array(z.string()),
   extentCount: z.number(),
   label: z.string(),
+  repos: z.array(z.string()),
 })
 
 let FcaLatticeEdgeSchema: z.ZodType<FcaLatticeEdge> = z.object({ from: z.string(), to: z.string() })
@@ -45,12 +46,14 @@ let 接口逻辑实现 = 接口逻辑
         .innerJoin('git_tag as t', 'r.tag_id', 't.id')
         .innerJoin('git_repo as repo', 'r.repo_id', 'repo.id')
         .where('repo.user_id', '=', userId)
-        .select(['r.repo_id', 't.name as tag_name'])
+        .select(['r.repo_id', 't.name as tag_name', 'repo.full_name as repo_name'])
         .execute()
 
       // 构建仓库→标签集映射
       let 仓库标签映射 = new Map<string, Set<string>>()
+      let 仓库名称映射 = new Map<string, string>()
       for (let 行 of 所有关系) {
+        仓库名称映射.set(行.repo_id, 行.repo_name)
         let 标签集 = 仓库标签映射.get(行.repo_id)
         if (标签集 === undefined) {
           标签集 = new Set<string>()
@@ -105,13 +108,13 @@ let 接口逻辑实现 = 接口逻辑
 
       // 通过枚举所有可能的标签子集来找形式概念（使用闭包算子去重）
       // 优化：从空集开始，逐步添加单个标签计算闭包
-      let 概念映射 = new Map<string, { intent: string[]; extentCount: number }>()
+      let 概念映射 = new Map<string, { intent: string[]; extent: Set<string>; extentCount: number }>()
 
       // 空集的闭包 = 顶节点
       let 顶节点闭包 = 计算闭包(new Set<string>())
       let 顶节点intent = Array.from(顶节点闭包.intent).sort()
       let 顶节点key = 顶节点intent.join(',')
-      概念映射.set(顶节点key, { intent: 顶节点intent, extentCount: 顶节点闭包.extent.size })
+      概念映射.set(顶节点key, { intent: 顶节点intent, extent: 顶节点闭包.extent, extentCount: 顶节点闭包.extent.size })
 
       // 使用 BFS 方式枚举: 从已发现的概念出发，每次加一个标签
       let 待处理队列: Set<string>[] = [顶节点闭包.intent]
@@ -135,7 +138,7 @@ let 接口逻辑实现 = 接口逻辑
           let key = intent排序.join(',')
           if (!已处理.has(key)) {
             已处理.add(key)
-            概念映射.set(key, { intent: intent排序, extentCount: 闭包结果.extent.size })
+            概念映射.set(key, { intent: intent排序, extent: 闭包结果.extent, extentCount: 闭包结果.extent.size })
             待处理队列.push(闭包结果.intent)
           }
         }
@@ -148,9 +151,18 @@ let 接口逻辑实现 = 接口逻辑
         if (值.intent.length === 0) {
           label = '全部'
         } else {
-          label = 值.intent.join(', ')
+          label = 值.intent.join(' & ')
         }
-        return { id: key === '' ? '__TOP__' : key, intent: 值.intent, extentCount: 值.extentCount, label }
+        let 仓库名字列表 = Array.from(值.extent)
+          .map((id) => 仓库名称映射.get(id) ?? '')
+          .filter((name) => name !== '')
+        return {
+          id: key === '' ? '__TOP__' : key,
+          intent: 值.intent,
+          extentCount: 值.extentCount,
+          label,
+          repos: 仓库名字列表,
+        }
       })
 
       // 4. 计算 Hasse 图的覆盖关系

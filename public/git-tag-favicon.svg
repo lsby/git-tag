@@ -1,0 +1,46 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 极高对比度的霓虹渐变 -->
+    <linearGradient id="mini-grad-cyan-purple" x1="80" y1="80" x2="432" y2="432" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22D3EE"/> <!-- Cyan 400 -->
+      <stop offset="60%" stop-color="#818CF8"/> <!-- Indigo 400 -->
+      <stop offset="100%" stop-color="#C084FC"/> <!-- Purple 400 -->
+    </linearGradient>
+    <linearGradient id="mini-grad-pink-orange" x1="150" y1="150" x2="362" y2="362" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F472B6"/> <!-- Pink 400 -->
+      <stop offset="100%" stop-color="#FB923C"/> <!-- Orange 400 -->
+    </linearGradient>
+    
+    <!-- 针对微型尺寸微调的滤镜，半径减小以防发糊 -->
+    <filter id="glow-mini" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- 饱满的暗底容器 (在 16x16 下提供轮廓支撑) -->
+  <rect x="32" y="32" width="448" height="448" rx="100" fill="#0A0F1D" stroke="url(#mini-grad-cyan-purple)" stroke-width="24" />
+
+  <!-- 胖标签内部的主干与分支 (极粗线条，高强对比) -->
+  <g filter="url(#glow-mini)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 吊牌小圆孔 (加粗) -->
+    <circle cx="256" cy="115" r="28" fill="#0A0F1D" stroke="url(#mini-grad-cyan-purple)" stroke-width="16" />
+    
+    <!-- 主干线 (极粗: 32px) -->
+    <path d="M 256 143 L 256 250" stroke="url(#mini-grad-cyan-purple)" stroke-width="32" />
+    
+    <!-- 两侧分支 -->
+    <path d="M 256 250 L 155 350" stroke="url(#mini-grad-cyan-purple)" stroke-width="28" />
+    <path d="M 256 250 L 357 350" stroke="url(#mini-grad-pink-orange)" stroke-width="28" />
+
+    <!-- 超大 Git 提交节点 (白色实心内圈，在微型下依然清晰) -->
+    <!-- 汇聚点 -->
+    <circle cx="256" cy="250" r="32" fill="#818CF8" stroke="#FFFFFF" stroke-width="12" />
+    
+    <!-- 终端左节点 -->
+    <circle cx="155" cy="350" r="36" fill="#22D3EE" stroke="#FFFFFF" stroke-width="12" />
+    
+    <!-- 终端右节点 -->
+    <circle cx="357" cy="350" r="36" fill="#FB923C" stroke="#FFFFFF" stroke-width="12" />
+  </g>
+</svg>

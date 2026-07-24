@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/public/git-tag-favicon.svg?v=1" type="image/svg+xml" />
+    <link rel="stylesheet" href="../global/style/global.css" />
+    <script src="../components/index.ts" type="module"></script>
+    <title>首页</title>
+  </head>
+
+  <body style="display: flex; flex-direction: column; height: 100vh; margin: 0; overflow: hidden">
+    <set-theme></set-theme>
+    <lsby-set-debug 排除事件="mousemove,mouseenter,mouseleave,scroll"></lsby-set-debug>
+    <lsby-set-html-full></lsby-set-html-full>
+    <lsby-login-check></lsby-login-check>
+
+    <!-- 顶部导航栏 -->
+    <div style="display: flex; border-bottom: 1px solid var(--边框颜色); background: var(--主要背景颜色)">
+      <div
+        id="tab-fca"
+        style="
+          padding: 12px 24px;
+          cursor: pointer;
+          color: var(--主色调);
+          border-bottom: 2px solid var(--主色调);
+          font-weight: bold;
+          font-size: 14px;
+          transition: all 0.2s;
+        "
+      >
+        Git-Tag 主工作区
+      </div>
+      <div
+        id="tab-provider"
+        style="
+          padding: 12px 24px;
+          cursor: pointer;
+          color: var(--次要文字颜色);
+          border-bottom: 2px solid transparent;
+          font-size: 14px;
+          transition: all 0.2s;
+        "
+      >
+        服务商管理
+      </div>
+      <div
+        id="tab-settings"
+        style="
+          padding: 12px 24px;
+          cursor: pointer;
+          color: var(--次要文字颜色);
+          border-bottom: 2px solid transparent;
+          font-size: 14px;
+          transition: all 0.2s;
+        "
+      >
+        设置
+      </div>
+    </div>
+
+    <!-- 页面容器 -->
+    <div id="view-fca" style="flex: 1; overflow: hidden; display: flex; flex-direction: column">
+      <fca-workspace></fca-workspace>
+    </div>
+
+    <div id="view-provider" style="flex: 1; overflow: hidden; display: none; flex-direction: column">
+      <provider-manager></provider-manager>
+    </div>
+
+    <div id="view-settings" style="flex: 1; overflow: auto; display: none; flex-direction: column">
+      <lsby-settings></lsby-settings>
+    </div>
+
+    <script>
+      const tabFca = document.getElementById('tab-fca')
+      const tabProvider = document.getElementById('tab-provider')
+      const tabSettings = document.getElementById('tab-settings')
+      const viewFca = document.getElementById('view-fca')
+      const viewProvider = document.getElementById('view-provider')
+      const viewSettings = document.getElementById('view-settings')
+
+      function switchTab(activeId) {
+        tabFca.style.color = activeId === 'fca' ? 'var(--主色调)' : 'var(--次要文字颜色)'
+        tabFca.style.borderBottomColor = activeId === 'fca' ? 'var(--主色调)' : 'transparent'
+        tabFca.style.fontWeight = activeId === 'fca' ? 'bold' : 'normal'
+        viewFca.style.display = activeId === 'fca' ? 'flex' : 'none'
+
+        tabProvider.style.color = activeId === 'provider' ? 'var(--主色调)' : 'var(--次要文字颜色)'
+        tabProvider.style.borderBottomColor = activeId === 'provider' ? 'var(--主色调)' : 'transparent'
+        tabProvider.style.fontWeight = activeId === 'provider' ? 'bold' : 'normal'
+        viewProvider.style.display = activeId === 'provider' ? 'flex' : 'none'
+
+        tabSettings.style.color = activeId === 'settings' ? 'var(--主色调)' : 'var(--次要文字颜色)'
+        tabSettings.style.borderBottomColor = activeId === 'settings' ? 'var(--主色调)' : 'transparent'
+        tabSettings.style.fontWeight = activeId === 'settings' ? 'bold' : 'normal'
+        viewSettings.style.display = activeId === 'settings' ? 'flex' : 'none'
+      }
+
+      tabFca.addEventListener('click', () => switchTab('fca'))
+      tabProvider.addEventListener('click', () => switchTab('provider'))
+      tabSettings.addEventListener('click', () => switchTab('settings'))
+    </script>
+  </body>
+</html>

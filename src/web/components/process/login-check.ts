@@ -21,7 +21,7 @@ export class 检查登录组件 extends 组件基类<发出事件类型, 监听�
     }
 
     // 将当前页面路径作为 URL 参数传递给登录页
-    let 当前路径 = encodeURIComponent(window.location.pathname + window.location.search)
-    window.location.assign(`/login.html?redirect=${当前路径}`)
+    // let 当前路径 = encodeURIComponent(window.location.pathname + window.location.search)
+    window.location.assign(`/landing.html`)
   }
 }

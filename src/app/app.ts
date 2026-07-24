@@ -1,7 +1,6 @@
-import { 接口, 接口逻辑, 服务器, 自定义接口返回器, 路径解析插件, 静态文件返回器 } from '@lsby/net-core'
+import { 接口, 接口逻辑, 服务器, 路径解析插件, 静态文件返回器 } from '@lsby/net-core'
 import { Right } from '@lsby/ts-fp-data'
 import path from 'path'
-import { z } from 'zod'
 import { 环境变量 } from '../global/env'
 import { globalLog, syncLogCallBack, 即时任务管理器, 定时任务管理器, 检查数据库是否可用 } from '../global/global'
 import { interfaceApiList } from '../interface/interface-list'
@@ -34,11 +33,12 @@ export class App {
         new 接口(
           '/favicon.ico',
           'get',
-          接口逻辑.构造([], async () => new Right({})),
-          new 自定义接口返回器(z.never(), z.object({}), z.string(), z.object({}), (req, res, _data) => {
-            res.statusCode = 404
-            return res.end()
+          接口逻辑.构造([], async () => {
+            let 项目根路径 = this.获得项目根路径()
+            let 文件路径 = path.resolve(项目根路径, 'public/git-tag-favicon.svg')
+            return new Right({ filePath: 文件路径 })
           }),
+          new 静态文件返回器({}),
         ),
         new 接口(
           new RegExp('/public/.*'),
