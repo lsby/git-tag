@@ -1,0 +1,35 @@
+<!DOCTYPE html><script type=importmap>{"imports":{"4VZa8":"./web.efad7d19.js"}}</script><meta charset=UTF-8><meta name=viewport content="width=device-width, initial-scale=1.0"><link rel=icon href=git-tag-favicon.81d4ee17.svg type=image/svg+xml><link rel=stylesheet href=admin-job.95132bc7.css><script src=admin-job.f5127eaa.js type=module></script><title>首页</title><body style=flex-direction:column;height:100vh;margin:0;display:flex;overflow:hidden>
+    <set-theme></set-theme>
+    <lsby-set-debug 排除事件=mousemove,mouseenter,mouseleave,scroll></lsby-set-debug>
+    <lsby-set-html-full></lsby-set-html-full>
+    <lsby-login-check></lsby-login-check>
+
+    
+    <div style="border-bottom:1px solid var(--边框颜色);background:var(--主要背景颜色);display:flex">
+      <div id=tab-fca style="cursor:pointer;color:var(--主色调);border-bottom:2px solid var(--主色调);padding:12px 24px;font-size:14px;font-weight:700;transition:all .2s">
+        Git-Tag 主工作区
+      </div>
+      <div id=tab-provider style="cursor:pointer;color:var(--次要文字颜色);border-bottom:2px solid #0000;padding:12px 24px;font-size:14px;transition:all .2s">
+        服务商管理
+      </div>
+      <div id=tab-settings style="cursor:pointer;color:var(--次要文字颜色);border-bottom:2px solid #0000;padding:12px 24px;font-size:14px;transition:all .2s">
+        设置
+      </div>
+    </div>
+
+    
+    <div id=view-fca style=flex-direction:column;flex:1;display:flex;overflow:hidden>
+      <fca-workspace></fca-workspace>
+    </div>
+
+    <div id=view-provider style=flex-direction:column;flex:1;display:none;overflow:hidden>
+      <provider-manager></provider-manager>
+    </div>
+
+    <div id=view-settings style=flex-direction:column;flex:1;display:none;overflow:auto>
+      <lsby-settings></lsby-settings>
+    </div>
+
+    <script>let tabFca=document.getElementById("tab-fca"),tabProvider=document.getElementById("tab-provider"),tabSettings=document.getElementById("tab-settings"),viewFca=document.getElementById("view-fca"),viewProvider=document.getElementById("view-provider"),viewSettings=document.getElementById("view-settings");function switchTab(t){tabFca.style.color="fca"===t?"var(--主色调)":"var(--次要文字颜色)",tabFca.style.borderBottomColor="fca"===t?"var(--主色调)":"transparent",tabFca.style.fontWeight="fca"===t?"bold":"normal",viewFca.style.display="fca"===t?"flex":"none",tabProvider.style.color="provider"===t?"var(--主色调)":"var(--次要文字颜色)",tabProvider.style.borderBottomColor="provider"===t?"var(--主色调)":"transparent",tabProvider.style.fontWeight="provider"===t?"bold":"normal",viewProvider.style.display="provider"===t?"flex":"none",tabSettings.style.color="settings"===t?"var(--主色调)":"var(--次要文字颜色)",tabSettings.style.borderBottomColor="settings"===t?"var(--主色调)":"transparent",tabSettings.style.fontWeight="settings"===t?"bold":"normal",viewSettings.style.display="settings"===t?"flex":"none"}tabFca.addEventListener("click",()=>switchTab("fca")),tabProvider.addEventListener("click",()=>switchTab("provider")),tabSettings.addEventListener("click",()=>switchTab("settings"));</script>
+  
+
