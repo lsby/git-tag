@@ -28,7 +28,7 @@ export class 落地页头部组件 extends 组件基类<发出事件类型, 监�
         position: 'sticky',
         top: '0',
         transition: 'all 0.3s ease',
-        background: 'rgba(20, 21, 26, 0.5)',
+        background: 'var(--头部背景)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--边框颜色)',
         flexShrink: '0',

@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.5.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Web Page
+        run: npx parcel build --no-cache --no-source-maps src/web/page/**/*.html --dist-dir gh-pages-dist --public-url .
+
+      - name: Map landing to index and rewrite paths
+        run: |
+          cp gh-pages-dist/landing.html gh-pages-dist/index.html
+          cp -r public gh-pages-dist/public
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          const dir = 'gh-pages-dist';
+          function walk(d) {
+            fs.readdirSync(d).forEach(f => {
+              const p = path.join(d, f);
+              if (fs.statSync(p).isDirectory()) {
+                if (f !== 'public') walk(p);
+              } else if (p.endsWith('.js') || p.endsWith('.html') || p.endsWith('.css')) {
+                let content = fs.readFileSync(p, 'utf8');
+                content = content.replace(/\/public\//g, './public/');
+                fs.writeFileSync(p, content, 'utf8');
+              }
+            });
+          }
+          walk(dir);
+          "
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: gh-pages-dist
+          branch: gh-pages
