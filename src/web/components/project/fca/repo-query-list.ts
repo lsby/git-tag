@@ -97,6 +97,11 @@ export class 仓库查询列表组件 extends 组件基类<发出事件类型, �
   private 防抖定时器: number | null = null
   private 全选正在执行 = false
 
+  private 刷新列表监听器 = (): void => {
+    this.状态.page = 1
+    void this.加载数据(false)
+  }
+
   private 键盘快捷键监听器 = async (e: KeyboardEvent): Promise<void> => {
     // 确保当前组件已连接到 DOM 且可见
     if (!this.isConnected || this.获得宿主样式().display === 'none') return
@@ -305,12 +310,14 @@ export class 仓库查询列表组件 extends 组件基类<发出事件类型, �
     })
 
     window.addEventListener('keydown', this.键盘快捷键监听器)
+    window.addEventListener('fca-list-should-refresh', this.刷新列表监听器)
 
     await this.加载数据(false)
   }
 
   protected override async 当卸载时(): Promise<void> {
     window.removeEventListener('keydown', this.键盘快捷键监听器)
+    window.removeEventListener('fca-list-should-refresh', this.刷新列表监听器)
   }
 
   private async 加载数据(追加数据 = false): Promise<void> {

@@ -1,5 +1,6 @@
 import { 组件基类 } from '../../../base/base'
 import { API管理器 } from '../../../global/manager/api-manager'
+import { 显示对话框, 显示确认对话框 } from '../../../global/manager/dialog-manager'
 import { 主题管理器 } from '../../../global/manager/theme-manager'
 import { 成功提示 } from '../../../global/manager/toast-manager'
 import { 创建元素 } from '../../../global/tools/create-element'
@@ -216,18 +217,18 @@ export class 用户设置组件 extends 组件基类<设置事件, 监听设置�
       let 重置按钮 = new 危险按钮({
         文本: '彻底重置并初始化',
         点击处理函数: async (): Promise<void> => {
-          let 确认 = window.confirm(
+          let 确认 = await 显示确认对话框(
             '【严重警告】此操作将清空数据库所有业务数据并恢复至初始状态，且不可逆！确认继续吗？',
           )
-          if (确认) {
+          if (确认 === true) {
             let 结果 = await API管理器.请求postJson('/api/system/reset-database', {})
             if (结果.status === 'success') {
-              window.alert(
+              await 显示对话框(
                 '数据库重置成功！即将跳转到登录页。请在服务端控制台查看新生成的管理员密码（如果你没有配置固定默认密码的话）。',
               )
               window.location.href = '/login.html' // 假设登录页路径是 /login.html
             } else {
-              window.alert(`重置失败: ${结果.data}`)
+              await 显示对话框(`重置失败: ${结果.data}`)
             }
           }
         },

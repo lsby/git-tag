@@ -235,6 +235,10 @@ export class 服务商管理组件 extends 组件基类<发出事件类型, 监�
           同步日志.添加日志('=> ' + String(res.message))
           同步按钮.style.backgroundColor = 'var(--成功颜色)'
           同步按钮.style.color = 'white'
+
+          window.dispatchEvent(new CustomEvent('fca-tree-should-refresh'))
+          window.dispatchEvent(new CustomEvent('fca-list-should-refresh'))
+
           setTimeout(() => {
             同步按钮.disabled = false
             同步按钮.textContent = 原文字
