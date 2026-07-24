@@ -126,9 +126,9 @@ export class FCA格图查看器 extends 组件基类<发出事件类型, 监听�
     this.shadow.appendChild(this.svg容器)
 
     try {
-      let 结果 = await API管理器.请求postJson并处理错误('/api/project/is-login', {})
-      if (结果.isLogin === true && typeof 结果.userId === 'string') {
-        this.当前用户Id = 结果.userId
+      let 结果 = await API管理器.请求postJson('/api/project/is-login', {})
+      if (结果.status === 'success' && 结果.data.isLogin === true && typeof 结果.data.userId === 'string') {
+        this.当前用户Id = 结果.data.userId
       }
     } catch (_e: unknown) {
       void this.log.error('获取用户信息失败', _e instanceof Error ? _e.message : String(_e))
