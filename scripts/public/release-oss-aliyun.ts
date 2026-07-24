@@ -170,6 +170,22 @@ async function 执行同步(): Promise<void> {
         continue
       }
       if (已处理的云端Key列表.has(对象.name) === false) {
+        let 相对路径 = 对象.name
+        if (云端目标目录 !== '' && 相对路径.startsWith(云端目标目录) === true) {
+          相对路径 = 相对路径.slice(云端目标目录.length)
+        }
+        let 路径部分 = 相对路径.split('/')
+        if (路径部分.length > 1) {
+          let 子目录相对路径 = 路径部分.slice(0, -1).join('/')
+          let 本地子目录绝对路径 = path.join(本地同步目录, 子目录相对路径)
+          if (fs.existsSync(本地子目录绝对路径) === false) {
+            continue
+          }
+          let 目录状态 = fs.statSync(本地子目录绝对路径)
+          if (目录状态.isDirectory() === false) {
+            continue
+          }
+        }
         待删除云端Key列表.push(对象.name)
       }
     }
