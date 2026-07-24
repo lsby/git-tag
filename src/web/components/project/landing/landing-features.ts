@@ -10,8 +10,43 @@ export class 落地页特性区组件 extends 组件基类<发出事件类型, �
   }
 
   protected override async 当加载时(): Promise<void> {
+    let 样式 = 创建元素('style', {
+      textContent: `
+        .features-section {
+          box-sizing: border-box;
+          width: 100%;
+        }
+        @media (max-width: 768px) {
+          .features-section {
+            padding: 40px 20px !important;
+            gap: 32px !important;
+          }
+          .features-title {
+            font-size: 24px !important;
+          }
+          .features-subtitle {
+            font-size: 14px !important;
+          }
+          .features-grid {
+            gap: 20px !important;
+          }
+          .feature-card {
+            padding: 20px !important;
+            gap: 12px !important;
+          }
+          .feature-card-title {
+            font-size: 18px !important;
+          }
+          .feature-card-desc {
+            font-size: 13px !important;
+          }
+        }
+      `,
+    })
+
     let 特性区 = 创建元素('section', {
       id: 'section-features',
+      className: 'features-section',
       style: {
         padding: '80px 40px',
         backgroundColor: 'var(--次要背景颜色)',
@@ -27,17 +62,20 @@ export class 落地页特性区组件 extends 组件基类<发出事件类型, �
     })
 
     let 标题 = 创建元素('h3', {
+      className: 'features-title',
       textContent: '为什么选择 Git-Tag？',
       style: { margin: '0', fontSize: '32px', fontWeight: 'bold', color: 'var(--文字颜色)' },
     })
 
     let 副标题 = 创建元素('p', {
+      className: 'features-subtitle',
       textContent: '基于形式概念分析理论设计，让海量代码仓库的管理井然有序',
       style: { margin: '0', fontSize: '16px', color: 'var(--次要文字颜色)' },
     })
     头部信息.append(标题, 副标题)
 
     let 网格 = 创建元素('div', {
+      className: 'features-grid',
       style: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
@@ -68,6 +106,7 @@ export class 落地页特性区组件 extends 组件基类<发出事件类型, �
 
     for (let 项 of 特性列表) {
       let 卡片 = 创建元素('div', {
+        className: 'feature-card',
         style: {
           padding: '32px',
           backgroundColor: 'var(--卡片背景颜色)',
@@ -83,11 +122,13 @@ export class 落地页特性区组件 extends 组件基类<发出事件类型, �
       })
 
       let 卡片标题 = 创建元素('h4', {
+        className: 'feature-card-title',
         textContent: 项.标题,
         style: { margin: '0', fontSize: '20px', fontWeight: 'bold', color: 'var(--文字颜色)' },
       })
 
       let 卡片描述 = 创建元素('p', {
+        className: 'feature-card-desc',
         textContent: 项.描述,
         style: { margin: '0', fontSize: '14px', color: 'var(--次要文字颜色)', lineHeight: '1.6' },
       })
@@ -108,6 +149,7 @@ export class 落地页特性区组件 extends 组件基类<发出事件类型, �
     }
 
     特性区.append(头部信息, 网格)
+    this.shadow.append(样式)
     this.shadow.append(特性区)
   }
 }

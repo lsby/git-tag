@@ -78,6 +78,14 @@ export class 落地页演示区组件 extends 组件基类<发出事件类型, �
             padding: 8px 0 !important;
           }
         }
+        @media (max-width: 768px) {
+          .demo-title {
+            font-size: 24px !important;
+          }
+          .demo-subtitle {
+            font-size: 13px !important;
+          }
+        }
       `,
     })
     this.shadow.append(样式)
@@ -115,11 +123,13 @@ export class 落地页演示区组件 extends 组件基类<发出事件类型, �
     })
 
     let 标题 = 创建元素('h3', {
+      className: 'demo-title',
       textContent: 'FCA 互动演示教程',
       style: { margin: '0', fontSize: '32px', fontWeight: 'bold', color: 'var(--文字颜色)' },
     })
 
     let 副标题 = 创建元素('p', {
+      className: 'demo-subtitle',
       textContent: '根据预设剧本为演示项目打标签，观察概念格图与分类过滤树如何自动生成与演进',
       style: { margin: '0', fontSize: '16px', color: 'var(--次要文字颜色)' },
     })

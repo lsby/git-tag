@@ -113,6 +113,7 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
         .tree-node-title {
           transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
           position: relative;
+          padding-left: calc(var(--层级, 0) * 16px + 8px) !important;
         }
         .tree-node-title:hover {
           background-color: var(--悬浮背景颜色);
@@ -152,6 +153,11 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
           flex-shrink: 1;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+        @media (max-width: 768px) {
+          .tree-node-title {
+            padding-left: calc(var(--层级, 0) * 8px + 8px) !important;
+          }
         }
       `,
     })

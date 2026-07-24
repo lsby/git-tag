@@ -17,6 +17,7 @@ export class 落地页头部组件 extends 组件基类<发出事件类型, 监�
     style.boxSizing = 'border-box'
 
     let 顶栏容器 = 创建元素('header', {
+      className: 'landing-header-container',
       style: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -120,6 +121,7 @@ export class 落地页头部组件 extends 组件基类<发出事件类型, 监�
 
     // Logo 文本
     let 标志文本 = 创建元素('span', {
+      className: 'landing-header-logo-text',
       textContent: 'Git-Tag',
       style: {
         fontSize: '22px',
@@ -200,11 +202,11 @@ export class 落地页头部组件 extends 组件基类<发出事件类型, 监�
     let 响应式样式 = 创建元素('style', {
       textContent: `
         @media (max-width: 768px) {
-          header[style*="height: 70px"] {
+          .landing-header-container {
             padding: 0 16px !important;
             height: 60px !important;
           }
-          span[style*="font-size: 22px"] {
+          .landing-header-logo-text {
             font-size: 16px !important;
           }
           .header-main-logo, .header-logo-separator {

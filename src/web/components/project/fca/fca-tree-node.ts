@@ -59,13 +59,14 @@ export class FCA树节点 {
     })
 
     this.名称元素 = 创建元素('span', {
+      className: 'tree-node-name',
       textContent: 配置.数据.name ?? '(未命名概念)',
-      style: { flex: '1', fontSize: '13.5px' },
+      style: { flex: '1', fontSize: '13.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
     })
 
     this.数量元素 = 创建元素('span', {
       textContent: `(${配置.数据.objectCount})`,
-      style: { color: 'var(--提示文字颜色)', fontSize: '12px', marginLeft: '6px' },
+      style: { color: 'var(--提示文字颜色)', fontSize: '12px', marginLeft: '6px', flexShrink: '0' },
     })
 
     if (配置.数据.hasChildren === false) {
@@ -85,7 +86,6 @@ export class FCA树节点 {
         display: 'flex',
         alignItems: 'center',
         padding: '4px 8px',
-        paddingLeft: `${配置.层级 * 16 + 8}px`,
         cursor: 'pointer',
         borderRadius: '4px',
         margin: '1px 4px',
@@ -95,6 +95,7 @@ export class FCA树节点 {
       },
       children: [this.展开图标, this.节点图标, this.名称元素, this.数量元素],
     })
+    this.标题行.style.setProperty('--层级', 配置.层级.toString())
 
     this.标题行.onclick = (e: MouseEvent): void => {
       e.stopPropagation()

@@ -11,8 +11,53 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
   }
 
   protected override async 当加载时(): Promise<void> {
+    let 样式 = 创建元素('style', {
+      textContent: `
+        .hero-section {
+          box-sizing: border-box;
+          width: 100%;
+        }
+        @media (max-width: 900px) {
+          .hero-section {
+            flex-direction: column !important;
+            padding: 40px 20px !important;
+            gap: 30px !important;
+            text-align: center;
+          }
+          .hero-left-column {
+            align-items: center !important;
+            flex: none !important;
+            width: 100%;
+          }
+          .hero-right-column {
+            flex: none !important;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+          }
+          .hero-title {
+            font-size: 28px !important;
+          }
+          .hero-description {
+            font-size: 14px !important;
+            text-align: justify;
+          }
+          .hero-button-group {
+            justify-content: center;
+            width: 100%;
+          }
+        }
+        @media (max-width: 480px) {
+          .hero-title {
+            font-size: 24px !important;
+          }
+        }
+      `,
+    })
+
     let 英雄区 = 创建元素('section', {
       id: 'section-hero',
+      className: 'hero-section',
       style: {
         display: 'flex',
         flexDirection: 'row',
@@ -27,6 +72,7 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
     })
 
     let 左侧 = 创建元素('div', {
+      className: 'hero-left-column',
       style: { flex: '1.2', display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'flex-start' },
     })
 
@@ -44,6 +90,7 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
     })
 
     let 标题 = 创建元素('h2', {
+      className: 'hero-title',
       textContent: '还在用前缀给仓库分类？',
       style: { margin: '0', fontSize: '38px', fontWeight: '800', lineHeight: '1.25', color: 'var(--文字颜色)' },
     })
@@ -60,12 +107,16 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
     标题.append(渐变文本)
 
     let 描述 = 创建元素('p', {
+      className: 'hero-description',
       textContent:
         '在 GitHub 等平台上，庞杂的仓库通常只能平铺呈现，依靠“项目名前缀”模拟分类低效且难以维护，而平台自带的标签功能又缺乏好用的管理页面。Git-Tag 原生读写 Topics 标签，通过数学模型自动整理并可视化出标签间的交叉与包含关系，为您建立仓库群的秩序。',
       style: { margin: '0', fontSize: '16px', color: 'var(--次要文字颜色)', lineHeight: '1.6' },
     })
 
-    let 按钮组 = 创建元素('div', { style: { display: 'flex', gap: '16px', marginTop: '12px' } })
+    let 按钮组 = 创建元素('div', {
+      className: 'hero-button-group',
+      style: { display: 'flex', gap: '16px', marginTop: '12px' },
+    })
 
     let 演示按钮 = new 普通按钮({
       文本: '查看互动演示 ↓',
@@ -79,6 +130,7 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
     左侧.append(徽章, 标题, 描述, 按钮组)
 
     let 右侧 = 创建元素('div', {
+      className: 'hero-right-column',
       style: { flex: '1', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' },
     })
 
@@ -86,33 +138,17 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
     右侧.append(svg)
 
     英雄区.append(左侧, 右侧)
+    this.shadow.append(样式)
     this.shadow.append(英雄区)
-
-    // Return element reference so parent can adjust styles if needed
-    // Actually, we can handle responsiveness directly here if possible, but
-    // since the parent handles responsiveness for `section-hero` right now,
-    // we can expose the `英雄区` property or just handle the resize inside.
-    let 响应式调整 = (): void => {
-      if (window.innerWidth < 900) {
-        英雄区.style.flexDirection = 'column'
-        英雄区.style.padding = '40px 20px'
-        英雄区.style.gap = '30px'
-      } else {
-        英雄区.style.flexDirection = 'row'
-        英雄区.style.padding = '80px 60px'
-        英雄区.style.gap = '60px'
-      }
-    }
-    window.addEventListener('resize', 响应式调整)
-    响应式调整()
   }
 
   private 创建动态格图SVG(): SVGElement {
     let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    svg.setAttribute('width', '420')
-    svg.setAttribute('height', '420')
+    svg.setAttribute('viewBox', '0 0 420 420')
     svg.style.overflow = 'visible'
-    svg.style.maxWidth = '100%'
+    svg.style.width = '100%'
+    svg.style.height = 'auto'
+    svg.style.maxWidth = '420px'
 
     let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
     let filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter')
