@@ -314,7 +314,7 @@ export class 登录组件 extends 组件基类<发出事件类型, 监听事件�
       if (重定向路径 !== null) {
         window.location.assign(decodeURIComponent(重定向路径))
       } else {
-        window.location.assign('/')
+        window.location.assign('./')
       }
     }
   }

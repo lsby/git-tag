@@ -1,6 +1,9 @@
 import { 组件基类 } from '../../../base/base'
 import { 创建元素 } from '../../../global/tools/create-element'
 
+let 公司标志图片 = new URL('../../../../../public/kedaya-logo.svg', import.meta.url).toString()
+let 标签标志图片 = new URL('../../../../../public/git-tag-logo.svg', import.meta.url).toString()
+
 type 发出事件类型 = { 导航点击: { 目标id: string } }
 type 监听事件类型 = {}
 
@@ -56,7 +59,7 @@ export class 落地页头部组件 extends 组件基类<发出事件类型, 监�
       },
     })
     let 主项目图标图片 = 创建元素('img', {
-      src: '/public/kedaya-logo.svg',
+      src: 公司标志图片,
       style: { width: '100%', height: '100%', objectFit: 'contain' },
     })
     主项目图标容器.appendChild(主项目图标图片)
@@ -114,7 +117,7 @@ export class 落地页头部组件 extends 组件基类<发出事件类型, 监�
       },
     })
     let 标志图片 = 创建元素('img', {
-      src: '/public/git-tag-logo.svg',
+      src: 标签标志图片,
       style: { width: '100%', height: '100%', objectFit: 'contain' },
     })
     标志图标.appendChild(标志图片)

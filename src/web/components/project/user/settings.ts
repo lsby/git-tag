@@ -226,7 +226,7 @@ export class 用户设置组件 extends 组件基类<设置事件, 监听设置�
               await 显示对话框(
                 '数据库重置成功！即将跳转到登录页。请在服务端控制台查看新生成的管理员密码（如果你没有配置固定默认密码的话）。',
               )
-              window.location.href = '/'
+              window.location.href = './'
             } else {
               await 显示对话框(`重置失败: ${结果.data}`)
             }

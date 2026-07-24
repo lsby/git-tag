@@ -1,6 +1,8 @@
 import { 组件基类 } from '../../../base/base'
 import { 创建元素 } from '../../../global/tools/create-element'
 
+let 公安备案图标 = new URL('../../../../../public/公安备案图标.png', import.meta.url).toString()
+
 type 发出事件类型 = {}
 type 监听事件类型 = {}
 
@@ -91,7 +93,7 @@ export class 落地页页脚组件 extends 组件基类<发出事件类型, 监�
       公安备案链接.style.color = 'var(--次要文字颜色)'
     }
 
-    let 公安图标 = 创建元素('img', { src: '/public/公安备案图标.png', style: { width: '16px', height: '16px' } })
+    let 公安图标 = 创建元素('img', { src: 公安备案图标, style: { width: '16px', height: '16px' } })
     let 公安文本 = 创建元素('span', { textContent: '新公网安备65010402002238号' })
 
     公安备案链接.appendChild(公安图标)
