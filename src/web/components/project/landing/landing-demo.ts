@@ -232,6 +232,7 @@ export class 落地页演示区组件 extends 组件基类<发出事件类型, �
       获取子节点: async (parentId) => this.获取树子节点(parentId),
       隐藏按钮: true,
       默认展开全部: true,
+      显示提示徽章: true,
     })
     this.树组件.className = 'demo-column'
     let 树宿主 = this.树组件.获得宿主样式()

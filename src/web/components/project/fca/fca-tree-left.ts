@@ -18,6 +18,10 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
   private API管理器 = API管理器
   private 树容器 = 创建元素('div', { style: { flex: '1', width: '100%', overflowY: 'auto' } })
   private 按钮容器 = 创建元素('div', { style: { display: 'flex', gap: '8px' } })
+  private 提示徽章 = 创建元素('span', {
+    className: 'tree-hint-badge',
+    innerHTML: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M15 15l5 5m-5-5a7 7 0 110-14 7 7 0 010 14z"/></svg> 点击节点可筛选`,
+  })
   private 节点状态映射 = new Map<string, FCA树节点>()
   private 当前选中节点唯一键: string | null = null
 
@@ -28,12 +32,14 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
   private 点击格图函数: (() => void) | undefined
   private 默认展开全部 = false
   private 隐藏按钮 = false
+  private 隐藏提示徽章 = true
 
   public 设置数据提供者(配置: {
     获取子节点: (parentId: string) => Promise<FcaTreeNodeData[]>
     点击格图?: () => void
     隐藏按钮?: boolean
     默认展开全部?: boolean
+    显示提示徽章?: boolean
   }): void {
     this.获取子节点函数 = 配置.获取子节点
     this.点击格图函数 = 配置.点击格图
@@ -47,6 +53,12 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
     if (配置.默认展开全部 === true) {
       this.默认展开全部 = true
     }
+    if (配置.显示提示徽章 === true) {
+      this.隐藏提示徽章 = false
+    } else {
+      this.隐藏提示徽章 = true
+    }
+    this.提示徽章.style.display = this.隐藏提示徽章 ? 'none' : 'inline-flex'
     void this.刷新树()
   }
 
@@ -161,10 +173,7 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
 
   private 创建容器(): void {
     let 标题文本 = 创建元素('span', { textContent: 'FCA树' })
-    let 提示徽章 = 创建元素('span', {
-      className: 'tree-hint-badge',
-      innerHTML: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M15 15l5 5m-5-5a7 7 0 110-14 7 7 0 010 14z"/></svg> 点击节点可筛选`,
-    })
+    this.提示徽章.style.display = this.隐藏提示徽章 ? 'none' : 'inline-flex'
 
     let 标题 = 创建元素('div', {
       style: {
@@ -176,7 +185,7 @@ export class FCA树左侧组件 extends 组件基类<发出事件类型, 监听�
         flexShrink: '1',
         overflow: 'hidden',
       },
-      children: [标题文本, 提示徽章],
+      children: [标题文本, this.提示徽章],
     })
 
     this.按钮容器.style.display = this.隐藏按钮 ? 'none' : 'flex'
