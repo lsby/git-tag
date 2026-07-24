@@ -109,7 +109,7 @@ export function 渲染格图(选项: 渲染选项): () => void {
       svg.setAttribute('width', '100%')
       svg.setAttribute('height', '100%')
       svg.setAttribute('xmlns', svgNs)
-      svg.style.backgroundColor = 'var(--主要背景颜色)'
+      svg.style.backgroundColor = 'transparent'
       svg容器.appendChild(svg)
 
       let d3Svg = d3.select<SVGSVGElement, unknown>(svg)
