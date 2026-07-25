@@ -225,7 +225,7 @@ export function 渲染格图(选项: 渲染选项): () => void {
       node
         .append('circle')
         .attr('r', 20)
-        .attr('fill', 'var(--卡片背景颜色)')
+        .attr('fill', 'rgba(15, 23, 42, 0.92)')
         .attr('stroke', 'var(--主色调)')
         .attr('stroke-width', 2)
 
@@ -233,16 +233,17 @@ export function 渲染格图(选项: 渲染选项): () => void {
         .append('text')
         .attr('text-anchor', 'middle')
         .attr('dominant-baseline', 'central')
-        .attr('font-size', 11)
-        .attr('font-weight', 'bold')
-        .attr('fill', 'var(--文字颜色)')
+        .attr('font-size', 12)
+        .attr('font-weight', '700')
+        .attr('fill', '#ffffff')
         .text((d) => d.extentCount)
 
       let textNode = node
         .append('text')
         .attr('text-anchor', 'middle')
-        .attr('font-size', 11)
-        .attr('fill', 'var(--文字颜色)')
+        .attr('font-size', 12)
+        .attr('font-weight', '600')
+        .attr('fill', '#e2e8f0')
 
       textNode.each((d, i, nodes) => {
         let currentTextNode = nodes[i]

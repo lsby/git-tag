@@ -234,21 +234,23 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
       ellipse.setAttribute('cy', 点.y.toString())
       ellipse.setAttribute('rx', rx.toString())
       ellipse.setAttribute('ry', ry.toString())
-      ellipse.setAttribute('fill', 'var(--卡片背景颜色)')
+      ellipse.setAttribute('fill', 'rgba(15, 23, 42, 0.92)')
       ellipse.setAttribute('stroke', 'var(--主色调)')
-      ellipse.setAttribute('stroke-width', '3')
+      ellipse.setAttribute('stroke-width', '2.5')
       ellipse.style.transition = 'all 0.3s ease'
-      ellipse.style.filter = 'drop-shadow(0 2px 4px var(--深阴影颜色))'
+      ellipse.style.filter = 'drop-shadow(0 2px 8px rgba(0,0,0,0.6))'
 
       let text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
       text.setAttribute('x', 点.x.toString())
-      text.setAttribute('y', (点.y + 4).toString())
+      text.setAttribute('y', (点.y + 5).toString())
       text.setAttribute('text-anchor', 'middle')
-      text.setAttribute('fill', 'var(--文字颜色)')
-      text.style.fontSize = '12px'
-      text.style.fontWeight = 'bold'
+      text.setAttribute('fill', '#ffffff')
+      text.style.fontSize = '13px'
+      text.style.fontWeight = '700'
+      text.style.letterSpacing = '0.3px'
       text.style.pointerEvents = 'none'
       text.style.userSelect = 'none'
+      text.style.textShadow = '0 1px 3px rgba(0,0,0,0.8)'
       text.textContent = 点.label
 
       g.append(ellipse, text)
@@ -260,7 +262,7 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
         ellipse.setAttribute('rx', (rx + 4).toString())
         ellipse.setAttribute('ry', (ry + 4).toString())
         ellipse.setAttribute('stroke-width', '4')
-        ellipse.setAttribute('fill', 'var(--选中背景颜色)')
+        ellipse.setAttribute('fill', 'rgba(24, 144, 255, 0.3)')
         ellipse.setAttribute('filter', 'url(#glow)')
 
         for (let [k, line] of 渲染的边Map.entries()) {
@@ -279,7 +281,7 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
         ellipse.setAttribute('rx', rx.toString())
         ellipse.setAttribute('ry', ry.toString())
         ellipse.setAttribute('stroke-width', '3')
-        ellipse.setAttribute('fill', 'var(--卡片背景颜色)')
+        ellipse.setAttribute('fill', 'rgba(15, 23, 42, 0.92)')
         ellipse.removeAttribute('filter')
 
         for (let [_k, line] of 渲染的边Map.entries()) {
