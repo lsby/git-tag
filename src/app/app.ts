@@ -12,6 +12,7 @@ export class App {
   private 获得项目根路径(): string {
     switch (环境变量.APP_ENV) {
       case 'development-web':
+      case 'development-electron':
       case 'test-web':
         return path.resolve(import.meta.dirname, '../../')
       case 'production-web':
