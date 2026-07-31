@@ -117,7 +117,8 @@ export function 渲染格图(选项: 渲染选项): () => void {
         .append('rect')
         .attr('width', '100%')
         .attr('height', '100%')
-        .attr('fill', 'transparent')
+        .style('fill', 'transparent')
+        .style('opacity', '0')
         .style('pointer-events', 'all')
 
       let 主组 = document.createElementNS(svgNs, 'g')
@@ -220,7 +221,15 @@ export function 渲染格图(选项: 渲染选项): () => void {
       let node = 节点组.selectAll<SVGGElement, unknown>('g').data(forceNodes).join('g').style('cursor', 'pointer')
 
       // 透明背景扩大感应区，防止鼠标在圆形和文字间隙移动时触发抖动
-      node.append('rect').attr('x', -40).attr('y', -30).attr('width', 80).attr('height', 85).attr('fill', 'transparent')
+      node
+        .append('rect')
+        .attr('x', -40)
+        .attr('y', -30)
+        .attr('width', 80)
+        .attr('height', 85)
+        .style('fill', 'transparent')
+        .style('opacity', '0')
+        .style('pointer-events', 'all')
 
       node
         .append('circle')
