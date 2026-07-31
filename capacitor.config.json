@@ -1,1 +1,1 @@
-{ "appId": "lsby.git.tag", "appName": "lsby-git-tag", "webDir": "dist/web" }
+{ "appId": "lsby.git.tag", "appName": "lsby-git-tag", "webDir": "dist/src/web" }
