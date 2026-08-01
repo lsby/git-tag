@@ -193,6 +193,46 @@ async function 执行同步(): Promise<void> {
     console.log(`发现有 ${待上传列表.length} 个文件需要上传/更新。`)
     console.log(`发现有 ${待删除云端Key列表.length} 个多余文件需要删除。`)
 
+    if (待上传列表.length === 0 && 待删除云端Key列表.length === 0) {
+      console.log('✨ 没有发现任何变动，云端已经是最新状态。')
+      return
+    }
+
+    if (待删除云端Key列表.length > 0) {
+      console.log('\n--- 待删除云端多余文件列表 ---')
+      for (let 键 of 待删除云端Key列表) {
+        console.log(`[待删除] ${键}`)
+      }
+      console.log('------------------------------')
+    }
+
+    let 是否静默 = process.argv.includes('--yes') || process.argv.includes('-y') || process.argv.includes('--silent')
+
+    async function 询问确认(提示文本: string): Promise<boolean> {
+      if (是否静默 === true) {
+        console.log(`${提示文本} (已自动确认 - 静默模式)`)
+        return true
+      }
+      let 终端 = readline.createInterface({ input: process.stdin, output: process.stdout })
+      try {
+        let 回答 = await 终端.question(提示文本)
+        终端.close()
+        let 确认输入 = 回答.trim().toLowerCase()
+        return 确认输入 === '' || 确认输入 === 'y' || 确认输入 === 'yes'
+      } catch (交互错误) {
+        终端.close()
+        throw 交互错误
+      }
+    }
+
+    let 确认继续 = await 询问确认(
+      `⚠️ 发现有 ${待上传列表.length} 个文件变动 (上传/更新) 以及 ${待删除云端Key列表.length} 个文件需要删除，是否确认继续同步？(Y/n): `,
+    )
+    if (确认继续 === false) {
+      console.log('已取消同步操作。')
+      return
+    }
+
     // 开始上传文件 (限制并发数量)
     let 最大并发数 = 5
     let 当前同步索引 = 0
@@ -233,29 +273,7 @@ async function 执行同步(): Promise<void> {
 
     // 开始删除多余云端文件
     if (待删除云端Key列表.length > 0) {
-      console.log('\n--- 待删除云端多余文件列表 ---')
-      for (let 键 of 待删除云端Key列表) {
-        console.log(`[待删除] ${键}`)
-      }
-      console.log('------------------------------')
-
-      let 终端 = readline.createInterface({ input: process.stdin, output: process.stdout })
-      try {
-        let 回答 = await 终端.question(
-          `⚠️ 发现有 ${待删除云端Key列表.length} 个多余文件，是否确认删除云端上的这些文件？(y/N): `,
-        )
-        终端.close()
-        let 确认输入 = 回答.trim().toLowerCase()
-        if (确认输入 !== 'y' && 确认输入 !== 'yes') {
-          console.log('已取消删除操作，跳过云端多余文件的清理。')
-          return
-        }
-      } catch (交互错误) {
-        终端.close()
-        throw 交互错误
-      }
-
-      console.log(`开始删除多余的云端对象...`)
+      console.log(`\n开始删除多余的云端对象 (共 ${待删除云端Key列表.length} 个)...`)
       // 阿里云 deleteMulti 接口限制单次最多 1000 个
       let 分片大小 = 1000
       let 偏移 = 0
