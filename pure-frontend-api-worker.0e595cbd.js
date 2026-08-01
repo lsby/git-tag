@@ -1,0 +1,1 @@
+[256,2048,512,4096,1024,8192,16384,524288].reduce((t,o)=>t|o),Object.getPrototypeOf(async function(){}).constructor,Symbol.iterator;
