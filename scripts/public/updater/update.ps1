@@ -209,7 +209,7 @@ function Expand-ValidatedZip([string]$ZipPath) {
   } finally {
     $archive.Dispose()
   }
-  foreach ($requiredPath in @('app\package.json', "app\$AppExeName", 'app\.env\.env.production.electron', 'update.cmd', 'scripts\update.ps1', 'lsby-git-tag-start.exe')) {
+  foreach ($requiredPath in @('app\package.json', "app\$AppExeName", 'app\.env\.env.production.electron', 'update.cmd', 'scripts\update.ps1', 'lsby-git-tag.exe')) {
     if (-not (Test-Path -LiteralPath (Join-Path $StagingDir $requiredPath) -PathType Leaf)) { throw "ZIP 缺少 $requiredPath" }
   }
   $stagedAppDir = Join-Path $StagingDir 'app'
@@ -361,7 +361,7 @@ try {
   Remove-Item -LiteralPath $MarkerPath -Force
   Remove-SafePath $StagingDir
   Remove-SafePath $WorkDir
-  Write-Host '更新成功。现在可以运行 lsby-git-tag-start.exe 启动新版本。'
+  Write-Host '更新成功。现在可以运行 lsby-git-tag.exe 启动新版本。'
   exit 0
 } catch {
   Write-Host "更新失败: $($_.Exception.Message)" -ForegroundColor Red
