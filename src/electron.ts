@@ -179,7 +179,7 @@ async function 创建主窗口(): Promise<void> {
   }
 
   try {
-    await 主窗口.loadURL(`http://127.0.0.1:${端口}/`)
+    await 主窗口.loadURL(`http://127.0.0.1:${端口}/app.html`)
   } catch (error) {
     await log.error('主窗口加载失败:', error)
     app.exit(1)

@@ -1,12 +1,22 @@
-name: Deploy to GitHub Pages
+name: CI and Deploy GitHub Pages
 
 on:
   push:
+    branches:
+      - master
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -16,47 +26,34 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9.5.0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Build Web Page
-        run: npx parcel build --no-cache --no-source-maps src/web/page/**/*.html --dist-dir gh-pages-dist --public-url .
+      - name: Check formatting
+        run: pnpm exec prettier --check .
 
-      - name: Map landing to index and rewrite paths
-        run: |
-          cp gh-pages-dist/landing.html gh-pages-dist/index.html
-          cp -r public gh-pages-dist/public
-          node -e "
-          const fs = require('fs');
-          const path = require('path');
-          const dir = 'gh-pages-dist';
-          function walk(d) {
-            fs.readdirSync(d).forEach(f => {
-              const p = path.join(d, f);
-              if (fs.statSync(p).isDirectory()) {
-                if (f !== 'public') walk(p);
-              } else if (p.endsWith('.js') || p.endsWith('.html') || p.endsWith('.css')) {
-                let content = fs.readFileSync(p, 'utf8');
-                content = content.replace(/\/public\//g, './public/');
-                fs.writeFileSync(p, content, 'utf8');
-              }
-            });
-          }
-          walk(dir);
-          "
+      - name: Check lint
+        run: pnpm exec eslint .
+
+      - name: Check types
+        run: pnpm run _check:type
+
+      - name: Build pure frontend application
+        run: pnpm run public:oss:aliyun -- --build-only=${{ github.event.repository.name }}
 
       - name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: gh-pages-dist
+          folder: dist/src/web
           branch: gh-pages

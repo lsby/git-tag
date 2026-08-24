@@ -1,6 +1,6 @@
 import { 组件基类 } from '../../../base/base'
 import { 创建元素 } from '../../../global/tools/create-element'
-import { 普通按钮 } from '../../general/base/base-button'
+import { 主要按钮, 普通按钮 } from '../../general/base/base-button'
 
 type 发出事件类型 = { 导航点击: { 目标id: string } }
 type 监听事件类型 = {}
@@ -118,6 +118,14 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
       style: { display: 'flex', gap: '16px', marginTop: '12px' },
     })
 
+    let 客户端下载按钮 = new 主要按钮({
+      文本: '获取桌面客户端 →',
+      元素样式: { padding: '12px 32px', fontSize: '16px', borderRadius: '24px' },
+      点击处理函数: (): void => {
+        window.open('https://github.com/lsby/git-tag/releases', '_blank')
+      },
+    })
+
     let 演示按钮 = new 普通按钮({
       文本: '查看互动演示 ↓',
       元素样式: { padding: '12px 32px', fontSize: '16px', borderRadius: '24px' },
@@ -126,7 +134,7 @@ export class 落地页英雄区组件 extends 组件基类<发出事件类型, �
       },
     })
 
-    按钮组.append(演示按钮)
+    按钮组.append(客户端下载按钮, 演示按钮)
     左侧.append(徽章, 标题, 描述, 按钮组)
 
     let 右侧 = 创建元素('div', {

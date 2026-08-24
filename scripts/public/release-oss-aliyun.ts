@@ -1,6 +1,7 @@
 import OSS from 'ali-oss'
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import crypto from 'crypto'
+import { config as 加载环境文件 } from 'dotenv'
 import fs from 'fs'
 import path from 'path'
 import readline from 'readline/promises'
@@ -11,299 +12,222 @@ let __当前文件名 = fileURLToPath(import.meta.url)
 let __当前目录名 = path.dirname(__当前文件名)
 let 项目根目录 = path.resolve(__当前目录名, '../../')
 let 本地同步目录 = path.join(项目根目录, 'dist/src/web')
-
 let 配置文件路径 = path.join(__当前目录名, 'release-oss-aliyun-config.json')
-let 阿里云配置校验器 = z.object({
-  region: z.string(),
-  accessKeyId: z.string(),
-  accessKeySecret: z.string(),
-  bucket: z.string(),
-  云端目标目录: z.string(),
-})
-let 阿里云配置 = 阿里云配置校验器.parse(JSON.parse(fs.readFileSync(配置文件路径, 'utf-8')))
 
-let 云端目标目录 = 阿里云配置.云端目标目录 // 同步的目标目录，须以 / 结尾，若直接同步到根目录，可设为空字符串 ''
+let 目标目录校验器 = z
+  .string()
+  .min(1)
+  .regex(/^\/?[\w/-]+\/?$/, '云端目标目录只能包含字母、数字、下划线、短横线和斜杠')
+
+let 配置校验器 = z.object({
+  region: z.string().min(1),
+  accessKeyId: z.string().min(1),
+  accessKeySecret: z.string().min(1),
+  bucket: z.string().min(1),
+  云端目标目录: 目标目录校验器,
+})
+type 配置类型 = z.infer<typeof 配置校验器>
+type 上传任务 = { 本地绝对路径: string; 云端键: string }
+
+function 读取配置(): 配置类型 {
+  if (fs.existsSync(配置文件路径) === false) {
+    throw new Error(
+      `缺少 OSS 配置文件。请复制 release-oss-aliyun-config.example.json 为 ${path.basename(配置文件路径)} 后填写。`,
+    )
+  }
+  return 配置校验器.parse(JSON.parse(fs.readFileSync(配置文件路径, 'utf-8')))
+}
+
+function 标准化目标目录(目录: string): string {
+  let 结果 = 目录.replace(/^\/+|\/+$/g, '')
+  if (结果 === '') throw new Error('为避免误删整个 Bucket，云端目标目录不能是根目录')
+  return `${结果}/`
+}
+
+function 执行pnpm(参数: string[]): void {
+  let 是否Windows = process.platform === 'win32'
+  let 命令 = 是否Windows === true ? 'cmd.exe' : 'pnpm'
+  let 完整参数 = 是否Windows === true ? ['/d', '/s', '/c', 'pnpm', ...参数] : 参数
+  execFileSync(命令, 完整参数, { cwd: 项目根目录, env: process.env, stdio: 'inherit' })
+}
+
+function 构建纯前端应用(云端目标目录: string): void {
+  let 公共路径 = `/${云端目标目录}`
+  let 环境文件路径 = path.join(项目根目录, '.env/.env.production.pure-frontend')
+  let 加载结果 = 加载环境文件({ path: 环境文件路径, override: true })
+  if (加载结果.error !== undefined) throw 加载结果.error
+  console.log(`正在构建纯前端模式，公共路径为 ${公共路径}`)
+  执行pnpm(['run', '_clean:web'])
+  执行pnpm([
+    'exec',
+    'parcel',
+    'build',
+    '--no-autoinstall',
+    '--no-cache',
+    '--no-source-maps',
+    '--no-scope-hoist',
+    '--dist-dir',
+    'dist/src/web',
+    '--public-url',
+    公共路径,
+    'src/web/page/**/*.html',
+  ])
+  if (fs.existsSync(本地同步目录) === false) throw new Error(`构建产物不存在: ${本地同步目录}`)
+}
 
 function 获取MIME类型(文件路径: string): string {
-  let 后缀 = path.extname(文件路径).toLowerCase()
   let 映射: Record<string, string> = {
-    '.html': 'text/html; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
+    '.gif': 'image/gif',
+    '.html': 'text/html; charset=utf-8',
+    '.ico': 'image/x-icon',
+    '.jpeg': 'image/jpeg',
+    '.jpg': 'image/jpeg',
     '.js': 'application/javascript; charset=utf-8',
     '.json': 'application/json; charset=utf-8',
+    '.mp4': 'video/mp4',
     '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',
     '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
+    '.wasm': 'application/wasm',
+    '.webm': 'video/webm',
     '.woff': 'font/woff',
     '.woff2': 'font/woff2',
-    '.ttf': 'font/ttf',
-    '.eot': 'application/vnd.ms-fontobject',
-    '.otf': 'font/otf',
-    '.wasm': 'application/wasm',
   }
-  let MIME = 映射[后缀]
-  if (MIME !== undefined) {
-    return MIME
-  }
-  return 'application/octet-stream'
+  return 映射[path.extname(文件路径).toLowerCase()] ?? 'application/octet-stream'
 }
 
-function 计算文件MD5(文件路径: string): string {
-  let 内容 = fs.readFileSync(文件路径)
-  return crypto.createHash('md5').update(内容).digest('hex').toLowerCase()
-}
-
-function 递归获取本地文件(目录路径: string, 根目录路径: string): string[] {
+function 递归获取文件(目录: string): string[] {
   let 结果: string[] = []
-  if (fs.existsSync(目录路径) === false) {
-    return 结果
-  }
-  let 所有项 = fs.readdirSync(目录路径, { withFileTypes: true })
-  for (let 项 of 所有项) {
-    let 绝对路径 = path.join(目录路径, 项.name)
-    if (项.isDirectory() === true) {
-      结果.push(...递归获取本地文件(绝对路径, 根目录路径))
-    } else {
-      结果.push(绝对路径)
-    }
+  for (let 项 of fs.readdirSync(目录, { withFileTypes: true })) {
+    let 绝对路径 = path.join(目录, 项.name)
+    if (项.isDirectory() === true) 结果.push(...递归获取文件(绝对路径))
+    else if (项.isFile() === true) 结果.push(绝对路径)
   }
   return 结果
 }
 
-async function 执行同步(): Promise<void> {
+function 计算MD5(文件路径: string): string {
+  return crypto.createHash('md5').update(fs.readFileSync(文件路径)).digest('hex').toLowerCase()
+}
+
+async function 获取云端对象(客户端: OSS, 前缀: string): Promise<OSS.ObjectMeta[]> {
+  let 对象列表: OSS.ObjectMeta[] = []
+  let 下一页标记: string | undefined = undefined
+  let 继续获取 = true
+  while (继续获取 === true) {
+    let 参数: OSS.ListV2ObjectsQuery = { prefix: 前缀, 'max-keys': 1000 }
+    if (下一页标记 !== undefined) 参数['continuation-token'] = 下一页标记
+    let 结果 = await 客户端.listV2(参数, {})
+    对象列表.push(...结果.objects)
+    继续获取 = 结果.isTruncated === true
+    下一页标记 = 结果.nextContinuationToken
+  }
+  return 对象列表
+}
+
+function 计算变更(
+  本地文件: string[],
+  云端对象: OSS.ObjectMeta[],
+  云端目标目录: string,
+): { 上传: 上传任务[]; 删除: string[] } {
+  let 云端映射 = new Map<string, OSS.ObjectMeta>()
+  for (let 对象 of 云端对象) 云端映射.set(对象.name, 对象)
+  let 本次文件键 = new Set<string>()
+  let 上传: 上传任务[] = []
+  for (let 本地绝对路径 of 本地文件) {
+    let 相对路径 = path.relative(本地同步目录, 本地绝对路径).replace(/\\/g, '/')
+    let 云端键 = `${云端目标目录}${相对路径}`
+    本次文件键.add(云端键)
+    let 已有对象 = 云端映射.get(云端键)
+    if (已有对象 === undefined || 已有对象.etag.replaceAll('"', '').toLowerCase() !== 计算MD5(本地绝对路径)) {
+      上传.push({ 本地绝对路径, 云端键 })
+    }
+  }
+  let 删除 = 云端对象
+    .filter((对象) => 对象.name.endsWith('/') === false && 本次文件键.has(对象.name) === false)
+    .map((对象) => 对象.name)
+  return { 上传, 删除 }
+}
+
+async function 请求确认(上传数量: number, 删除数量: number): Promise<boolean> {
+  if (process.argv.includes('--yes') === true || process.argv.includes('-y') === true) return true
+  let 终端 = readline.createInterface({ input: process.stdin, output: process.stdout })
   try {
-    let 公共路径 = 云端目标目录
-    if (公共路径 === '') {
-      公共路径 = '/'
-    }
-    if (公共路径.startsWith('/') === false) {
-      公共路径 = '/' + 公共路径
-    }
-    if (公共路径.endsWith('/') === false) {
-      公共路径 = 公共路径 + '/'
-    }
-
-    console.log(`正在运行本地构建，资源公共路径 (public-url): ${公共路径} ...`)
-    execSync(`npm run _clean:web`, { stdio: 'inherit', cwd: 项目根目录 })
-    execSync(
-      `npx parcel build --no-cache --no-source-maps src/web/page/**/*.html --dist-dir dist/src/web --public-url ${公共路径}`,
-      { stdio: 'inherit', cwd: 项目根目录 },
-    )
-    console.log('本地构建完成！')
-
-    if (fs.existsSync(本地同步目录) === false) {
-      throw new Error(`本地打包目录不存在: ${本地同步目录}`)
-    }
-
-    if (
-      阿里云配置.accessKeyId === '请填写 accessKeyId' ||
-      阿里云配置.accessKeySecret === '请填写 accessKeySecret' ||
-      阿里云配置.bucket === '请填写 bucket'
-    ) {
-      console.log('⚠️ 警告: 请先在配置文件中配置您的阿里云 OSS 密钥和 Bucket 名称！')
-      process.exit(1)
-    }
-
-    let 客户端 = new OSS({
-      region: 阿里云配置.region,
-      accessKeyId: 阿里云配置.accessKeyId,
-      accessKeySecret: 阿里云配置.accessKeySecret,
-      bucket: 阿里云配置.bucket,
-    })
-
-    console.log('正在获取本地文件列表...')
-    let 本地文件绝对路径列表 = 递归获取本地文件(本地同步目录, 本地同步目录)
-    console.log(`本地共有 ${本地文件绝对路径列表.length} 个文件待处理。`)
-
-    console.log('正在获取云端对象列表...')
-    let 所有云端对象: OSS.ObjectMeta[] = []
-    let 继续获取 = true
-    let 下一个标记: string | undefined = undefined
-
-    while (继续获取 === true) {
-      let 查询参数: OSS.ListV2ObjectsQuery = { prefix: 云端目标目录, 'max-keys': 1000 }
-      if (下一个标记 !== undefined) {
-        查询参数['continuation-token'] = 下一个标记
-      }
-      let 结果: OSS.ListV2ObjectResult = await 客户端.listV2(查询参数, {})
-      所有云端对象.push(...结果.objects)
-      if (结果.isTruncated === true) {
-        下一个标记 = 结果.nextContinuationToken
-      } else {
-        继续获取 = false
-      }
-    }
-    console.log(`云端共有 ${所有云端对象.length} 个对象。`)
-
-    // 建立云端文件映射方便对比
-    let 云端映射 = new Map<string, OSS.ObjectMeta>()
-    for (let 对象 of 所有云端对象) {
-      云端映射.set(对象.name, 对象)
-    }
-
-    let 待上传列表: { 本地绝对路径: string; 云端Key: string }[] = []
-    let 已处理的云端Key列表 = new Set<string>()
-
-    for (let 本地绝对路径 of 本地文件绝对路径列表) {
-      let 相对路径 = path.relative(本地同步目录, 本地绝对路径).replace(/\\/g, '/')
-      let 云端Key = 云端目标目录 + 相对路径
-      已处理的云端Key列表.add(云端Key)
-
-      let 云端对象 = 云端映射.get(云端Key)
-      if (云端对象 === undefined) {
-        待上传列表.push({ 本地绝对路径, 云端Key })
-      } else {
-        let 本地MD5 = 计算文件MD5(本地绝对路径)
-        let 云端ETag = 云端对象.etag.replace(/"/g, '').toLowerCase()
-        if (本地MD5 !== 云端ETag) {
-          待上传列表.push({ 本地绝对路径, 云端Key })
-        }
-      }
-    }
-
-    let 待删除云端Key列表: string[] = []
-    for (let 对象 of 所有云端对象) {
-      if (对象.name.endsWith('/') === true) {
-        continue
-      }
-      if (已处理的云端Key列表.has(对象.name) === false) {
-        let 相对路径 = 对象.name
-        if (云端目标目录 !== '' && 相对路径.startsWith(云端目标目录) === true) {
-          相对路径 = 相对路径.slice(云端目标目录.length)
-        }
-        let 路径部分 = 相对路径.split('/')
-        if (路径部分.length > 1) {
-          let 子目录相对路径 = 路径部分.slice(0, -1).join('/')
-          let 本地子目录绝对路径 = path.join(本地同步目录, 子目录相对路径)
-          if (fs.existsSync(本地子目录绝对路径) === false) {
-            continue
-          }
-          let 目录状态 = fs.statSync(本地子目录绝对路径)
-          if (目录状态.isDirectory() === false) {
-            continue
-          }
-        }
-        待删除云端Key列表.push(对象.name)
-      }
-    }
-
-    console.log(`发现有 ${待上传列表.length} 个文件需要上传/更新。`)
-    console.log(`发现有 ${待删除云端Key列表.length} 个多余文件需要删除。`)
-
-    if (待上传列表.length === 0 && 待删除云端Key列表.length === 0) {
-      console.log('✨ 没有发现任何变动，云端已经是最新状态。')
-      return
-    }
-
-    if (待删除云端Key列表.length > 0) {
-      console.log('\n--- 待删除云端多余文件列表 ---')
-      for (let 键 of 待删除云端Key列表) {
-        console.log(`[待删除] ${键}`)
-      }
-      console.log('------------------------------')
-    }
-
-    let 是否静默 = process.argv.includes('--yes') || process.argv.includes('-y') || process.argv.includes('--silent')
-
-    async function 询问确认(提示文本: string): Promise<boolean> {
-      if (是否静默 === true) {
-        console.log(`${提示文本} (已自动确认 - 静默模式)`)
-        return true
-      }
-      let 终端 = readline.createInterface({ input: process.stdin, output: process.stdout })
-      try {
-        let 回答 = await 终端.question(提示文本)
-        终端.close()
-        let 确认输入 = 回答.trim().toLowerCase()
-        return 确认输入 === '' || 确认输入 === 'y' || 确认输入 === 'yes'
-      } catch (交互错误) {
-        终端.close()
-        throw 交互错误
-      }
-    }
-
-    let 确认继续 = await 询问确认(
-      `⚠️ 发现有 ${待上传列表.length} 个文件变动 (上传/更新) 以及 ${待删除云端Key列表.length} 个文件需要删除，是否确认继续同步？(Y/n): `,
-    )
-    if (确认继续 === false) {
-      console.log('已取消同步操作。')
-      return
-    }
-
-    // 开始上传文件 (限制并发数量)
-    let 最大并发数 = 5
-    let 当前同步索引 = 0
-    let 错误列表: Error[] = []
-
-    async function 运行上传任务(): Promise<void> {
-      while (当前同步索引 < 待上传列表.length) {
-        let 索引 = 当前同步索引
-        当前同步索引 = 当前同步索引 + 1
-        let 任务 = 待上传列表[索引]
-        if (任务 === undefined) {
-          continue
-        }
-        try {
-          let MIME类型 = 获取MIME类型(任务.本地绝对路径)
-          console.log(`[上传中] ${任务.云端Key} (${MIME类型})`)
-          await 客户端.put(任务.云端Key, 任务.本地绝对路径, { headers: { 'content-type': MIME类型 } })
-          console.log(`[成功] ${任务.云端Key}`)
-        } catch (处理错误) {
-          console.error(`❌ 上传失败 ${任务.云端Key}:`, 处理错误)
-          if (处理错误 instanceof Error) {
-            错误列表.push(处理错误)
-          } else {
-            错误列表.push(new Error(String(处理错误)))
-          }
-        }
-      }
-    }
-
-    let 并发Promise列表: Promise<void>[] = []
-    let 上传任务数 = Math.min(最大并发数, 待上传列表.length)
-    let 计数 = 0
-    while (计数 < 上传任务数) {
-      并发Promise列表.push(运行上传任务())
-      计数 = 计数 + 1
-    }
-    await Promise.all(并发Promise列表)
-
-    // 开始删除多余云端文件
-    if (待删除云端Key列表.length > 0) {
-      console.log(`\n开始删除多余的云端对象 (共 ${待删除云端Key列表.length} 个)...`)
-      // 阿里云 deleteMulti 接口限制单次最多 1000 个
-      let 分片大小 = 1000
-      let 偏移 = 0
-      while (偏移 < 待删除云端Key列表.length) {
-        let 当前分片 = 待删除云端Key列表.slice(偏移, 偏移 + 分片大小)
-        偏移 = 偏移 + 分片大小
-        try {
-          console.log(`正在删除一批云端对象 (数量: ${当前分片.length})...`)
-          await 客户端.deleteMulti(当前分片, { quiet: true })
-          console.log(`已成功删除当前批次`)
-        } catch (删除错误) {
-          console.error('❌ 批量删除失败:', 删除错误)
-          if (删除错误 instanceof Error) {
-            错误列表.push(删除错误)
-          } else {
-            错误列表.push(new Error(String(删除错误)))
-          }
-        }
-      }
-    }
-
-    if (错误列表.length > 0) {
-      throw new Error(`同步过程中出现 ${错误列表.length} 个错误！`)
-    }
-
-    console.log('🎉 阿里云 OSS 同步完成！')
-  } catch (外部错误) {
-    console.error('❌ 同步终止，发生异常:', 外部错误)
-    process.exit(1)
+    let 回答 = await 终端.question(`将上传或更新 ${上传数量} 个文件，并删除 ${删除数量} 个云端文件。继续？(Y/n): `)
+    let 标准回答 = 回答.trim().toLowerCase()
+    return 标准回答 === '' || 标准回答 === 'y' || 标准回答 === 'yes'
+  } finally {
+    终端.close()
   }
 }
 
-执行同步().catch(console.error)
+async function 执行上传(客户端: OSS, 任务列表: 上传任务[]): Promise<void> {
+  let 当前索引 = 0
+  let 运行任务 = async (): Promise<void> => {
+    while (当前索引 < 任务列表.length) {
+      let 任务 = 任务列表[当前索引]
+      当前索引 = 当前索引 + 1
+      if (任务 === undefined) continue
+      let 扩展名 = path.extname(任务.本地绝对路径).toLowerCase()
+      let 是否需要每次验证 = 扩展名 === '.html' || path.basename(任务.本地绝对路径) === 'sw.js'
+      console.log(`[上传] ${任务.云端键}`)
+      await 客户端.put(任务.云端键, 任务.本地绝对路径, {
+        headers: {
+          'cache-control': 是否需要每次验证 === true ? 'no-cache' : 'public, max-age=31536000, immutable',
+          'content-type': 获取MIME类型(任务.本地绝对路径),
+        },
+      })
+    }
+  }
+  let 并发任务: Promise<void>[] = []
+  for (let 索引 = 0; 索引 < Math.min(5, 任务列表.length); 索引 = 索引 + 1) 并发任务.push(运行任务())
+  await Promise.all(并发任务)
+}
+
+async function 执行删除(客户端: OSS, 删除列表: string[]): Promise<void> {
+  for (let 起点 = 0; 起点 < 删除列表.length; 起点 = 起点 + 1000) {
+    let 当前批次 = 删除列表.slice(起点, 起点 + 1000)
+    console.log(`[删除] ${当前批次.length} 个云端文件`)
+    await 客户端.deleteMulti(当前批次, { quiet: true })
+  }
+}
+
+async function 执行同步(): Promise<void> {
+  let 仅构建参数 = process.argv.find((参数) => 参数.startsWith('--build-only='))
+  if (仅构建参数 !== undefined) {
+    let 云端目标目录 = 标准化目标目录(目标目录校验器.parse(仅构建参数.slice('--build-only='.length)))
+    构建纯前端应用(云端目标目录)
+    console.log('纯前端 OSS 子目录构建完成。')
+    return
+  }
+  let 配置 = 读取配置()
+  let 云端目标目录 = 标准化目标目录(配置.云端目标目录)
+  构建纯前端应用(云端目标目录)
+  let 客户端 = new OSS({
+    region: 配置.region,
+    accessKeyId: 配置.accessKeyId,
+    accessKeySecret: 配置.accessKeySecret,
+    bucket: 配置.bucket,
+  })
+  let 本地文件 = 递归获取文件(本地同步目录)
+  let 云端对象 = await 获取云端对象(客户端, 云端目标目录)
+  let 变更 = 计算变更(本地文件, 云端对象, 云端目标目录)
+  console.log(`本地 ${本地文件.length} 个文件，待上传 ${变更.上传.length} 个，待删除 ${变更.删除.length} 个。`)
+  if (变更.上传.length === 0 && 变更.删除.length === 0) {
+    console.log('云端已经是最新状态。')
+    return
+  }
+  for (let 云端键 of 变更.删除) console.log(`[待删除] ${云端键}`)
+  if ((await 请求确认(变更.上传.length, 变更.删除.length)) === false) {
+    console.log('已取消同步。')
+    return
+  }
+  await 执行上传(客户端, 变更.上传)
+  await 执行删除(客户端, 变更.删除)
+  console.log('阿里云 OSS 同步完成。')
+}
+
+void 执行同步().catch((错误: unknown): void => {
+  console.error('阿里云 OSS 同步失败:', 错误)
+  process.exitCode = 1
+})

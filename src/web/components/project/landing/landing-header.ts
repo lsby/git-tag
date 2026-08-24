@@ -149,7 +149,7 @@ export class 落地页头部组件 extends 组件基类<发出事件类型, 监�
       标志图标.style.boxShadow = 'none'
     }
     当前项目区.onclick = (): void => {
-      window.location.assign('./landing.html')
+      window.location.assign('./')
     }
 
     标志总容器.appendChild(主项目图标容器)
@@ -199,7 +199,6 @@ export class 落地页头部组件 extends 组件基类<发出事件类型, 监�
     let 顶栏Github文本 = 创建元素('span', { className: 'header-github-text', textContent: 'GitHub' })
     顶栏Github按钮.appendChild(顶栏Github图标容器)
     顶栏Github按钮.appendChild(顶栏Github文本)
-
     顶栏容器.appendChild(顶栏Github按钮)
 
     let 响应式样式 = 创建元素('style', {
