@@ -1,4 +1,5 @@
 import { web请求 } from '@lsby/ts-http-extend'
+import { 环境变量 } from '../../../global/env'
 import { 已审阅的any } from '../../../tools/types'
 import { InterfaceType } from '../../../types/interface-type'
 import { 错误提示 } from '../manager/toast-manager'
@@ -209,7 +210,7 @@ export class API管理器类 {
           ? JSON.stringify(请求结果.data)
           : String(请求结果.data)
       let 提示 = `请求接口失败: ${接口路径}: ${错误详情}`
-      void 错误提示(提示)
+      错误提示(提示)
       throw new Error(提示)
     }
     return 请求结果.data as 已审阅的any
@@ -227,7 +228,6 @@ export class API管理器类 {
 
 export let API管理器 = new API管理器类()
 
-import { 环境变量 } from '../../../global/env'
 if ('serviceWorker' in navigator && 环境变量.BUILD_TARGET === 'pure-frontend') {
   serviceWorkerReady = navigator.serviceWorker
     .register(new URL('../../sw.ts', import.meta.url), { type: 'module' })
@@ -367,6 +367,8 @@ function withPureFrontendDatabaseLock<T>(task: () => Promise<T>): Promise<T> {
   if ('locks' in navigator === false) {
     return Promise.reject(new Error('当前浏览器不支持 Web Locks API，无法安全地在多个页面间使用本地数据库'))
   }
+  // 锁覆盖一次本地 API 或管理命令的完整执行过程。每个标签页可以拥有自己的
+  // 长生命周期 Worker，但任意时刻只有一个标签页可以操作 IndexedDB 中的 SQLite。
   return navigator.locks.request<T>(
     pureFrontendDatabaseLockName,
     { mode: 'exclusive' },

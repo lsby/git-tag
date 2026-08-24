@@ -1,7 +1,3 @@
----
-trigger: always_on
----
-
 # lsby-git-tag AI 编码指南
 
 ## 架构概览
@@ -76,6 +72,18 @@ trigger: always_on
 
 ## 开发工作流
 
+### 初始化与配置命令 (Setup)
+
+在基于本模板新建项目或进行初始化配置时，提供了以下 setup 命令：
+
+1. **端口分配与初始化 (`pnpm setup:ports`)**:
+   - 运行脚本: `scripts/setup/init-ports.ts`
+   - 作用: 自动扫描并分配一组随机空闲端口（包括 `APP_PORT`、`WEB_PORT`、`WEB_HMR_PORT`、`TEST_APP_PORT`、`TEST_WEB_PORT`、`TEST_WEB_HMR_PORT`），并批量同步更新至所有环境的 `.env` 配置文件（开发、生产、纯前端、测试等）以及 Docker 部署配置文件（`docker-compose.yml`、`dockerfile`）中，彻底解除硬编码并避免多项目本地端口冲突。
+
+2. **项目全局重命名 (`pnpm setup:rename`)**:
+   - 运行脚本: `scripts/setup/rename-project.ts`
+   - 作用: 交互式项目重命名工具。通过命令行交互提示输入新的作者名和项目名，自动将项目内所有出现的作者与项目名变体（包括 `@作者/项目名`、`@作者:项目名`、`作者.项目.名`、`作者-项目名`）在所有文本文件中进行全局批量替换，并自动跳过构建产物与依赖目录。
+
 ### 项目约定
 
 1. **API接口定义**
@@ -124,8 +132,8 @@ trigger: always_on
 
 - **Tier 1 (UI 主线程)**: 负责渲染页面UI。传统的 HTTP 请求会被 `src/web/global/manager/api-manager.ts` 自动拦截，转换为基于 `MessageChannel` 的 Web Worker 通信，转发给 API Worker。
 - **Tier 2 (API Worker)**: 位于 `src/web/pure-frontend-api-worker.ts`。在此处加载原本跑在后端的业务逻辑与接口代码。为了让 Node.js 代码能在浏览器运行，打包器会根据 `package.json` 中的 `alias` 配置，借助 `src/web/mock/` 目录将 `fs`、`crypto`、`express` 等核心库 Mock 掉。
-- **Tier 3 (DB Worker)**: 位于 `src/web/local-sqlite-worker.ts`。在独立的 Worker 中基于 WebAssembly (WASM) 运行 SQLite，并通过 OPFS (Origin Private File System) 进行数据的浏览器本地持久化。
-- **多标签页并发安全**: 为防止多个浏览器标签页同时读写本地 SQLite 导致数据库损坏，系统启动时会利用 Web Locks API (`navigator.locks.request('lsby-pure-frontend:local.db')`) 申请排他锁。只有抢到锁的标签页才会初始化这些 Worker。
+- **Tier 3 (DB Worker)**: 位于 `src/web/local-sqlite-worker.ts`。在独立的 Worker 中基于 WebAssembly (WASM) 运行 SQLite，并通过 IndexedDB 进行浏览器本地持久化。当前明确使用 `useIdbStorage`，不依赖 OPFS 的 `FileSystemSyncAccessHandle`，也不使用 SharedArrayBuffer。
+- **多标签页并发安全**: 为防止多个浏览器标签页同时操作本地 SQLite，UI 主线程会在每次本地 API 请求或数据库管理命令的完整执行期间，通过 Web Locks API (`navigator.locks.request('lsby-pure-frontend:local.db')`) 持有跨标签页排他锁。其他标签页的请求会等待当前请求释放锁；Worker 本身是每个标签页按需创建并长期存活的，不存在“只有一个标签页可以初始化 Worker”的限制。
 - **构建与生成**: 开发时必须使用 `运行纯前端开发套件`，因为它会独占性地启动 `_持续生成纯前端本地API列表` 这类专属任务；纯前端的构建命令同样需要严格配合专有的 `.env.xxx.pure-frontend` 配置文件使用。
 
 5. **其他**
@@ -177,5 +185,12 @@ trigger: always_on
 - 除非用户要求, 否则不要主动写测试
 - 测试分单元测试, 集成测试和端到端测试
   - 单元测试: 使用 Co-location 测试风格, 测试代码和接口代码在同一文件夹, 参考 `src/interface/demo/base/add/t01.test.ts`
-  - 集成测试: 借助接口两用性, 对多个接口进行集成测试, 写在 `test/integration` 文件夹中, 注意, 这里的操作使用黑箱模式(只能通过接口两用性调用接口来操作), 验证使用灰箱模式(可以通过数据库句柄直接查询数据库验证数据是否符合预期)
+  - 集成测试: 借助接口两用性, 对多个接口进行集成测试, 写在 `test/integration` 文件夹中
   - 端到端测试: 借助 playwright, 实际模拟用户操作来进行测试, 写在 `test/e2e` 文件夹中, 注意 `test/e2e/tools/demo-mode.ts` 提供了一种 demo 模式, 方便做演示, 但调试代码时, 总是使用非 demo 模式来快速开发
+    - `DEMO_MODE=true` 时会使用有头浏览器, 并开启演示说明浮层、操作动画和额外等待; `DEMO_MODE=false` 时会使用无头浏览器并跳过上述演示效果。该变量只控制展示方式和执行速度, 不改变测试操作、断言或测试数据
+- 测试流程
+  - 准备阶段, 需要彻底清空测试数据库, 并重新执行初始化脚本
+  - 运行前, 如果需要构造特定数据, 可以通过数据库句柄插入
+  - 运行中, 必须使用黑箱模式(只能通过接口两用性调用接口来操作), 严禁使用数据库句柄
+  - 运行后, 如果需要验证数据库的数据变更, 可以使用灰箱模式(可以通过数据库句柄直接查询数据库验证数据是否符合预期)
+  - 完成后, 无需再次清空测试数据库, 它会在下次运行测试前被清空
