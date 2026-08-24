@@ -1,6 +1,10 @@
 {
   "name": "@lsby/git-tag",
   "version": "0.0.20",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lsby/git-tag.git"
+  },
   "type": "module",
   "main": "./dist/src/electron.js",
   "browser": {
